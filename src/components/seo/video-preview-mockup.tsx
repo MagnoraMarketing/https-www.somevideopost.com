@@ -3,11 +3,23 @@ import { Link2, Sparkles, CheckCircle2, type LucideIcon } from "lucide-react";
 const ORANGE_GRADIENT = "linear-gradient(135deg, #FFB36B 0%, #FF6B4A 100%)";
 
 /**
- * Lightweight, fully-English hero mockup of the video-generation dashboard.
- * Used instead of CinematicWalkthrough, whose demo SVGs have Danish room
- * labels baked into the artwork and don't localize.
+ * Lightweight, fully-controllable hero mockup of the video-generation
+ * dashboard. Used instead of CinematicWalkthrough, whose demo SVGs have
+ * Danish room labels baked into the artwork and don't localize via props.
  */
-export function VideoPreviewMockup({ icon: RoomIcon, roomLabel, title }: { icon: LucideIcon; roomLabel: string; title: string }) {
+export function VideoPreviewMockup({
+  icon: RoomIcon,
+  roomLabel,
+  title,
+  generatingLabel = "AI video generating",
+  processingLabel = "Processing photos … 75%",
+}: {
+  icon: LucideIcon;
+  roomLabel: string;
+  title: string;
+  generatingLabel?: string;
+  processingLabel?: string;
+}) {
   return (
     <div className="relative mx-auto w-full max-w-sm select-none">
       <div className="absolute -inset-6 rounded-[2rem] bg-blue-500/20 blur-3xl" />
@@ -43,11 +55,11 @@ export function VideoPreviewMockup({ icon: RoomIcon, roomLabel, title }: { icon:
         </div>
 
         <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.03] p-4">
-          <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-slate-300">AI video generating</p>
+          <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-slate-300">{generatingLabel}</p>
           <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
             <div className="h-full rounded-full" style={{ width: "75%", background: "linear-gradient(90deg, #4d8dff, #22d3ee)" }} />
           </div>
-          <p className="mt-2 text-xs text-slate-400">Processing photos … 75%</p>
+          <p className="mt-2 text-xs text-slate-400">{processingLabel}</p>
         </div>
       </div>
     </div>

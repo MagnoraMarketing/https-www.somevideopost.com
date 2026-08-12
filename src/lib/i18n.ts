@@ -42,6 +42,49 @@ export function localeSwitchHref(loc: Locale): string {
   return loc === "da" ? "/?lang=da" : LOCALE_PATHS[loc];
 }
 
+/**
+ * Top-level slugs whose *default*, unprefixed content is English rather than
+ * Danish — the AI-video pillar pages, built English-first to target global
+ * search intent. Their Danish/Spanish/German variants live under /da /es /de
+ * prefixes instead, the reverse of every other page on the site.
+ */
+export const EN_DEFAULT_SLUGS = new Set([
+  "some-ai-video",
+  "ai-video-for-real-estate",
+  "generate-ai-video-free",
+  "ai-video-for-apartment",
+]);
+
+const LOCALE_PREFIX_SEGMENTS: string[] = ["en", "es", "de", "da"];
+
+/**
+ * Compute the equivalent URL for `targetLocale`, given the current pathname,
+ * for any page that has locale variants (homepage, priser,
+ * hvorfor-somevideopost, and the AI-video pillar pages). Used by the
+ * language switcher so switching language keeps you on the same page
+ * instead of bouncing to the homepage.
+ *
+ * When the target is a page's *default* locale, the URL is unprefixed
+ * (e.g. "/priser", "/some-ai-video") — but since a stale `locale` cookie
+ * would otherwise redirect that bare URL straight back to the previous
+ * locale (see proxy.ts), an explicit `?lang=` override is appended.
+ */
+export function localizedPathFor(pathname: string, targetLocale: Locale): string {
+  const segments = pathname.split("/").filter(Boolean);
+  const hasPrefix = segments.length > 0 && LOCALE_PREFIX_SEGMENTS.includes(segments[0]);
+  const slugSegments = hasPrefix ? segments.slice(1) : segments;
+  const slug = slugSegments.join("/");
+  const topSlug = slugSegments[0];
+
+  const defaultLocale: Locale = topSlug && EN_DEFAULT_SLUGS.has(topSlug) ? "en" : "da";
+
+  if (targetLocale === defaultLocale) {
+    const barePath = slug === "" ? "/" : `/${slug}`;
+    return `${barePath}?lang=${targetLocale}`;
+  }
+  return slug === "" ? `/${targetLocale}` : `/${targetLocale}/${slug}`;
+}
+
 // ── App UI (sidebar & common) ──────────────────────────────────────────────
 export const APP_LABELS: Record<Locale, {
   home: string; create: string; schedule: string; channels: string;

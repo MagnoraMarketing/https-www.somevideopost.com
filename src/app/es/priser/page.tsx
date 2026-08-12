@@ -1,35 +1,37 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Check, Sparkles, CreditCard, Video, Wand2, Share2 } from "lucide-react";
-import { getCurrency } from "@/lib/locale-server";
-import { formatPriceKey, MONTHLY_POST_CREDITS } from "@/lib/currency";
+import { Check, Sparkles, CreditCard, Video, Wand2, Share2, Home } from "lucide-react";
+import { currencyForLocale, formatPriceKey, MONTHLY_POST_CREDITS } from "@/lib/currency";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
-import { CinematicWalkthrough } from "@/components/walkthrough/cinematic-walkthrough";
+import { VideoPreviewMockup } from "@/components/seo/video-preview-mockup";
+
+const BASE = "https://www.somevideopost.com";
 
 export const metadata: Metadata = {
-  title: "Priser — SOME VIDEO POST | AI-video og sociale medier til udlejere",
+  title: "Precios — SOME VIDEO POST | Vídeo IA y redes sociales para anfitriones",
   description:
-    "Enkel pris for somevideopost.com: €10/md. for studie-adgang med AI-opslag og direkte deling til sociale medier, og €50 pr. præsentationsvideo — betal kun for de videoer, du bruger. Ingen binding.",
+    "Precios simples para somevideopost.com: 10 €/mes por acceso al estudio con publicaciones IA y publicación directa en redes sociales, y 50 € por vídeo de presentación — paga solo por los vídeos que uses. Sin compromiso.",
   keywords:
-    "somevideopost priser, AI video pris, sociale medier udlejning, feriebolig markedsføring pris, præsentationsvideo pris",
+    "precios somevideopost, precio vídeo IA, marketing redes sociales alquiler, precio marketing alquiler vacacional, precio vídeo de presentación",
   alternates: {
-    canonical: "https://www.somevideopost.com/priser",
+    canonical: `${BASE}/es/priser`,
     languages: {
-      da: "https://www.somevideopost.com/priser",
-      en: "https://www.somevideopost.com/en/priser",
-      es: "https://www.somevideopost.com/es/priser",
-      de: "https://www.somevideopost.com/de/priser",
-      "x-default": "https://www.somevideopost.com/priser",
+      da: `${BASE}/priser`,
+      en: `${BASE}/en/priser`,
+      es: `${BASE}/es/priser`,
+      de: `${BASE}/de/priser`,
+      "x-default": `${BASE}/priser`,
     },
   },
   openGraph: {
-    title: "Priser — SOME VIDEO POST",
+    title: "Precios — SOME VIDEO POST",
     description:
-      "€10/md. for studie-adgang med AI-opslag og direkte deling, og €50 pr. præsentationsvideo. Betal kun for det, du bruger. Ingen binding.",
+      "10 €/mes por acceso al estudio con publicaciones IA y publicación directa, y 50 € por vídeo de presentación. Paga solo por lo que uses. Sin compromiso.",
     type: "website",
     siteName: "somevideopost.com",
-    url: "https://www.somevideopost.com/priser",
+    locale: "es_ES",
+    url: `${BASE}/es/priser`,
   },
 };
 
@@ -44,15 +46,15 @@ function CheckItem({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default async function PriserPage() {
-  const currency = await getCurrency();
+export default function PriserEsPage() {
+  const currency = currencyForLocale("es");
   const subscriptionPrice = formatPriceKey("subscription", currency);
   const videoPrice = formatPriceKey("video", currency);
   const postPrice = formatPriceKey("aiPost", currency, { decimals: true });
 
   return (
     <div className="min-h-screen text-slate-100" style={{ background: "#050d24" }}>
-      <SiteHeader active="pricing" />
+      <SiteHeader active="pricing" locale="es" />
 
       {/* Hero */}
       <div className="relative overflow-hidden border-b border-white/5" style={{ background: "linear-gradient(135deg, #040a1c 0%, #071233 55%, #0a1f4d 100%)" }}>
@@ -60,13 +62,13 @@ export default async function PriserPage() {
         <div className="pointer-events-none absolute -right-40 -top-40 h-[500px] w-[500px] rounded-full border border-blue-400/20" style={{ boxShadow: "0 0 80px rgba(59,130,246,0.2)" }} />
         <div className="relative mx-auto max-w-4xl px-6 py-16 text-center">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-blue-400/25 bg-blue-500/10 px-4 py-1.5 text-xs font-semibold text-blue-200">
-            <CreditCard size={13} /> Enkel, gennemsigtig pris
+            <CreditCard size={13} /> Precios simples y transparentes
           </div>
           <h1 className="text-3xl font-bold text-white sm:text-4xl md:text-5xl">
-            Betal kun for det, du bruger
+            Paga solo por lo que uses
           </h1>
           <p className="mt-4 text-base text-slate-300 max-w-xl mx-auto">
-            Studie-adgang for {subscriptionPrice}/md. giver dig AI-opslag og direkte deling til sociale medier. Præsentationsvideoer betaler du pr. styk — {videoPrice} — så du kun betaler for de videoer, du faktisk laver. Ingen binding.
+            El acceso al estudio por {subscriptionPrice}/mes te da publicaciones IA y publicación directa en redes sociales. Los vídeos de presentación se facturan por vídeo — {videoPrice} — así que solo pagas por los vídeos que realmente haces. Sin compromiso.
           </p>
         </div>
       </div>
@@ -79,22 +81,22 @@ export default async function PriserPage() {
           {/* Studio access — subscription */}
           <div className="relative flex flex-col rounded-2xl border border-blue-400/50 bg-white/[0.05] p-8 shadow-[0_0_45px_rgba(59,130,246,0.25)] backdrop-blur-sm">
             <div className="mb-2 inline-flex w-fit items-center gap-2 rounded-lg bg-blue-500/15 px-2.5 py-1 text-xs font-semibold text-blue-300">
-              <Sparkles size={12} /> Studie-adgang
+              <Sparkles size={12} /> Acceso al estudio
             </div>
             <div className="mt-4 flex items-baseline gap-1">
               <span className="text-4xl font-extrabold text-white">{subscriptionPrice}</span>
-              <span className="text-slate-400 text-sm">/md.</span>
+              <span className="text-slate-400 text-sm">/mes</span>
             </div>
-            <p className="mt-1 text-xs text-slate-500">Faktureres månedligt · ingen binding</p>
+            <p className="mt-1 text-xs text-slate-500">Facturación mensual · sin compromiso</p>
             <p className="mt-3 text-sm text-slate-300">
-              Adgang til hele studiet: generér AI-opslag og del dem direkte på dine sociale medier.
+              Acceso a todo el estudio: genera publicaciones IA y compártelas directamente en tus redes sociales.
             </p>
             <ul className="my-6 flex flex-col gap-2.5">
-              <CheckItem><strong className="text-white">{MONTHLY_POST_CREDITS} AI-opslag</strong> inkluderet hver måned ({postPrice}/opslag)</CheckItem>
-              <CheckItem>Del opslag direkte på Facebook & Instagram</CheckItem>
-              <CheckItem>Alle studie-værktøjer og downloads i alle formater</CheckItem>
-              <CheckItem>Opret præsentationsvideoer (betales pr. styk)</CheckItem>
-              <CheckItem>Blog, guides og løbende nye funktioner</CheckItem>
+              <CheckItem><strong className="text-white">{MONTHLY_POST_CREDITS} publicaciones IA</strong> incluidas cada mes ({postPrice}/publicación)</CheckItem>
+              <CheckItem>Comparte publicaciones directamente en Facebook e Instagram</CheckItem>
+              <CheckItem>Todas las herramientas del estudio y descargas en todos los formatos</CheckItem>
+              <CheckItem>Crea vídeos de presentación (se pagan por vídeo)</CheckItem>
+              <CheckItem>Blog, guías y nuevas funciones continuamente</CheckItem>
             </ul>
             <div className="mt-auto">
               <Link
@@ -102,7 +104,7 @@ export default async function PriserPage() {
                 className="block w-full rounded-xl py-3 text-center text-sm font-bold text-white shadow-[0_0_20px_rgba(59,130,246,0.35)] transition-opacity hover:opacity-90"
                 style={{ background: "linear-gradient(135deg, #1e4f9a, #4d8dff)" }}
               >
-                Kom i gang
+                Comenzar
               </Link>
             </div>
           </div>
@@ -110,22 +112,22 @@ export default async function PriserPage() {
           {/* Presentation video — pay per use */}
           <div className="flex flex-col rounded-2xl border border-orange-500/25 bg-orange-500/[0.06] p-8 backdrop-blur-sm">
             <div className="mb-2 inline-flex w-fit items-center gap-2 rounded-lg bg-orange-500/15 px-2.5 py-1 text-xs font-semibold text-orange-400">
-              <Video size={12} /> Præsentationsvideo
+              <Video size={12} /> Vídeo de presentación
             </div>
             <div className="mt-4 flex items-baseline gap-1">
               <span className="text-4xl font-extrabold text-white">{videoPrice}</span>
-              <span className="text-slate-400 text-sm">/ stk.</span>
+              <span className="text-slate-400 text-sm">/ ud.</span>
             </div>
-            <p className="mt-1 text-xs text-slate-500">Betaling pr. brug · ingen abonnement på video</p>
+            <p className="mt-1 text-xs text-slate-500">Pago por uso · sin suscripción de vídeo</p>
             <p className="mt-3 text-sm text-slate-300">
-              En cinematisk AI-genereret præsentationsvideo af din bolig — betal kun, når du bruger den.
+              Un vídeo de presentación cinematográfico generado por IA de tu propiedad — paga solo cuando lo uses.
             </p>
             <ul className="my-6 flex flex-col gap-2.5">
-              <CheckItem><strong className="text-white">{videoPrice} pr. video</strong> — ingen binding, ingen skjulte gebyrer</CheckItem>
-              <CheckItem>Indsæt et annonce-link — AI&apos;en bygger videoen for dig</CheckItem>
-              <CheckItem>Cinematisk 9:16-video klar til Reels & TikTok</CheckItem>
-              <CheckItem>Se en forhåndsvisning, betal først når du er tilfreds</CheckItem>
-              <CheckItem>Download og del direkte, når videoen er låst op</CheckItem>
+              <CheckItem><strong className="text-white">{videoPrice} por vídeo</strong> — sin compromiso, sin cargos ocultos</CheckItem>
+              <CheckItem>Pega el enlace de un anuncio — la IA construye el vídeo por ti</CheckItem>
+              <CheckItem>Vídeo cinematográfico 9:16 listo para Reels y TikTok</CheckItem>
+              <CheckItem>Míralo en vista previa, paga solo cuando estés satisfecho</CheckItem>
+              <CheckItem>Descarga y comparte directamente una vez desbloqueado</CheckItem>
             </ul>
             <div className="mt-auto">
               <Link
@@ -133,7 +135,7 @@ export default async function PriserPage() {
                 className="block w-full rounded-xl py-3 text-center text-sm font-bold text-white transition-opacity hover:opacity-90"
                 style={{ background: ORANGE_GRADIENT }}
               >
-                Opret din første video
+                Crea tu primer vídeo
               </Link>
             </div>
           </div>
@@ -141,12 +143,12 @@ export default async function PriserPage() {
 
         {/* How it works */}
         <div className="rounded-2xl border border-blue-400/20 bg-blue-500/[0.06] p-6 md:p-8 backdrop-blur-sm">
-          <h2 className="text-lg font-bold text-white mb-6">Sådan fungerer det</h2>
+          <h2 className="text-lg font-bold text-white mb-6">Cómo funciona</h2>
           <div className="grid gap-6 sm:grid-cols-3">
             {[
-              { icon: Sparkles, title: "1 · Tegn studie-adgang", desc: `For ${subscriptionPrice}/md. får du adgang til studiet og ${MONTHLY_POST_CREDITS} AI-opslag hver måned.` },
-              { icon: Wand2, title: "2 · Lav opslag og videoer", desc: `Generér opslag inkluderet i din adgang, og lav præsentationsvideoer for ${videoPrice}/stk. efter behov.` },
-              { icon: Share2, title: "3 · Del direkte", desc: "Del opslag og videoer direkte på Facebook og Instagram fra dashboardet." },
+              { icon: Sparkles, title: "1 · Consigue acceso al estudio", desc: `Por ${subscriptionPrice}/mes obtienes acceso al estudio y ${MONTHLY_POST_CREDITS} publicaciones IA cada mes.` },
+              { icon: Wand2, title: "2 · Crea publicaciones y vídeos", desc: `Genera publicaciones incluidas en tu acceso, y crea vídeos de presentación por ${videoPrice} cada uno según lo necesites.` },
+              { icon: Share2, title: "3 · Comparte directamente", desc: "Comparte publicaciones y vídeos directamente en Facebook e Instagram desde el panel." },
             ].map((step) => (
               <div key={step.title} className="flex flex-col gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/15">
@@ -161,32 +163,32 @@ export default async function PriserPage() {
 
         {/* FAQ */}
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-8 backdrop-blur-sm">
-          <h2 className="text-xl font-bold text-white mb-6">Ofte stillede spørgsmål</h2>
+          <h2 className="text-xl font-bold text-white mb-6">Preguntas frecuentes</h2>
           <div className="grid gap-6 md:grid-cols-2">
             {[
               {
-                q: "Hvad er inkluderet i studie-adgangen?",
-                a: `Studie-adgang for ${subscriptionPrice}/md. giver dig ${MONTHLY_POST_CREDITS} AI-opslag om måneden, direkte deling til sociale medier og alle studiets værktøjer. Præsentationsvideoer betales særskilt pr. styk.`,
+                q: "¿Qué incluye el acceso al estudio?",
+                a: `El acceso al estudio por ${subscriptionPrice}/mes te da ${MONTHLY_POST_CREDITS} publicaciones IA al mes, publicación directa en redes sociales y todas las herramientas del estudio. Los vídeos de presentación se pagan aparte, por vídeo.`,
               },
               {
-                q: "Hvad koster en præsentationsvideo?",
-                a: `En præsentationsvideo koster ${videoPrice} pr. styk. Du betaler kun for de videoer, du laver — der er intet abonnement på video.`,
+                q: "¿Cuánto cuesta un vídeo de presentación?",
+                a: `Un vídeo de presentación cuesta ${videoPrice} cada uno. Solo pagas por los vídeos que haces — no hay suscripción de vídeo.`,
               },
               {
-                q: "Hvornår betaler jeg for en video?",
-                a: "Du kan se en forhåndsvisning, mens videoen bygges, og betaler først, når du vil låse den fulde video op til download og deling. Uploadede videoer koster ingenting.",
+                q: "¿Cuándo pago por un vídeo?",
+                a: "Puedes ver una vista previa mientras se construye el vídeo, y solo pagas cuando quieras desbloquear el vídeo completo para descargarlo y compartirlo. Subir fotos no cuesta nada.",
               },
               {
-                q: "Kan jeg dele direkte på sociale medier?",
-                a: "Ja. Med studie-adgang deler du opslag og videoer direkte på Facebook og Instagram fra dashboardet.",
+                q: "¿Puedo compartir directamente en redes sociales?",
+                a: "Sí. Con acceso al estudio, compartes publicaciones y vídeos directamente en Facebook e Instagram desde el panel.",
               },
               {
-                q: "Hvad sker der, når mine månedlige opslag er brugt?",
-                a: `Din adgang giver ${MONTHLY_POST_CREDITS} AI-opslag om måneden. Saldoen fyldes automatisk op hver måned, så længe dit abonnement er aktivt.`,
+                q: "¿Qué pasa cuando se acaban mis publicaciones mensuales?",
+                a: `Tu acceso te da ${MONTHLY_POST_CREDITS} publicaciones IA al mes. El saldo se recarga automáticamente cada mes mientras tu suscripción esté activa.`,
               },
               {
-                q: "Er der binding?",
-                a: "Nej. Studie-adgangen er månedlig uden binding, og du kan opsige når som helst. Videoer betaler du kun for, når du bruger dem.",
+                q: "¿Hay compromiso de permanencia?",
+                a: "No. El acceso al estudio es mensual sin compromiso, y puedes cancelar cuando quieras. Los vídeos solo se pagan cuando los usas.",
               },
             ].map((item) => (
               <div key={item.q}>
@@ -204,22 +206,22 @@ export default async function PriserPage() {
         >
           <div className="grid items-center gap-10 md:grid-cols-2">
             <div>
-              <span className="mb-3 inline-block rounded-full border border-orange-400/30 bg-orange-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-orange-400">Live demo</span>
-              <h2 className="text-2xl font-bold mb-3">Se hvad en præsentationsvideo indeholder</h2>
+              <span className="mb-3 inline-block rounded-full border border-orange-400/30 bg-orange-500/10 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-orange-400">Demo en vivo</span>
+              <h2 className="text-2xl font-bold mb-3">Mira cómo es un vídeo de presentación</h2>
               <p className="text-sm leading-relaxed text-slate-300 mb-5 max-w-md">
-                Sådan ser en AI-genereret præsentationsvideo ud. Indsæt et link til din annonce — AI&apos;en henter billederne, bygger fotoruten og leverer en cinematisk video i 9:16 til Reels & TikTok.
+                Así es un vídeo de presentación generado por IA. Pega el enlace de tu anuncio — la IA obtiene las fotos, construye la secuencia de tomas y entrega un vídeo cinematográfico en 9:16 listo para Reels y TikTok.
               </p>
               <ul className="flex flex-col gap-2 text-sm text-slate-300">
-                <CheckItem><span className="text-slate-300">Prøv selv: scroll i videoen for at gå rundt i boligen</span></CheckItem>
-                <CheckItem><span className="text-slate-300">Skift farvestemning med filtre</span></CheckItem>
-                <CheckItem><span className="text-slate-300">Klar på under 15 minutter</span></CheckItem>
+                <CheckItem><span className="text-slate-300">Una vista previa real de tu vídeo generado</span></CheckItem>
+                <CheckItem><span className="text-slate-300">Movimiento de cámara y transiciones añadidos automáticamente</span></CheckItem>
+                <CheckItem><span className="text-slate-300">Listo en menos de 15 minutos</span></CheckItem>
               </ul>
             </div>
             <div className="flex justify-center">
               <div className="relative w-full max-w-[300px]">
                 <div className="absolute inset-0 scale-90 rounded-[2.5rem] opacity-40 blur-2xl" style={{ background: ORANGE_GRADIENT }} />
                 <div className="relative">
-                  <CinematicWalkthrough locale="da" />
+                  <VideoPreviewMockup icon={Home} roomLabel="Salón" title="TU PROPIEDAD · DEMO" generatingLabel="Vídeo IA generándose" processingLabel="Procesando fotos … 75%" />
                 </div>
               </div>
             </div>
@@ -233,9 +235,9 @@ export default async function PriserPage() {
         >
           <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full border border-blue-400/20" style={{ boxShadow: "0 0 60px rgba(59,130,246,0.2)" }} />
           <div className="relative">
-            <h2 className="text-2xl font-bold mb-2">Klar til at komme i gang?</h2>
+            <h2 className="text-2xl font-bold mb-2">¿Listo para empezar?</h2>
             <p className="text-slate-300 text-sm mb-6 max-w-md mx-auto">
-              Kom i gang med somevideopost.com i dag. Ingen binding.
+              Empieza con somevideopost.com hoy. Sin compromiso.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-3">
               <Link
@@ -243,20 +245,20 @@ export default async function PriserPage() {
                 className="rounded-xl px-6 py-3 text-sm font-bold text-white shadow-[0_0_30px_rgba(255,107,74,0.35)] transition-opacity hover:opacity-90"
                 style={{ background: ORANGE_GRADIENT }}
               >
-                Opret konto
+                Crear cuenta
               </Link>
               <a
                 href="mailto:mail@somevideopost.com"
                 className="rounded-xl border border-white/25 bg-white/5 px-6 py-3 text-sm font-bold text-white hover:bg-white/10 transition"
               >
-                Kontakt salg
+                Contactar ventas
               </a>
             </div>
           </div>
         </div>
       </div>
 
-      <SiteFooter />
+      <SiteFooter locale="es" />
     </div>
   );
 }

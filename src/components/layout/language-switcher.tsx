@@ -1,18 +1,21 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { Globe } from "lucide-react";
-import { LOCALE_FLAGS, LOCALE_LABELS, LOCALES, localeSwitchHref, type Locale } from "@/lib/i18n";
+import { LOCALE_FLAGS, LOCALE_LABELS, LOCALES, localizedPathFor, type Locale } from "@/lib/i18n";
 
 /**
  * Dark-themed language switcher used across the marketing header.
  *
  * Opens on click/tap (with hover-open on pointer devices) so it works on
  * touchscreens, where `:hover` never fires and a hover-only dropdown can
- * never be opened.
+ * never be opened. Switching stays on the current page's translated
+ * equivalent (via localizedPathFor) instead of jumping to the homepage.
  */
 export function LanguageSwitcher({ current }: { current: Locale }) {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
 
   return (
     <div
@@ -44,7 +47,7 @@ export function LanguageSwitcher({ current }: { current: Locale }) {
             {LOCALES.map((loc) => (
               <a
                 key={loc}
-                href={localeSwitchHref(loc)}
+                href={localizedPathFor(pathname, loc)}
                 role="menuitem"
                 onClick={() => setOpen(false)}
                 className={`flex items-center gap-2 px-3 py-2 text-xs hover:bg-white/5 transition-colors ${loc === current ? "font-semibold text-blue-300" : "text-slate-300"}`}
