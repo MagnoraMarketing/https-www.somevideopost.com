@@ -17,6 +17,10 @@ export default function robots(): MetadataRoute.Robots {
         "/ai-video-for-real-estate",
         "/generate-ai-video-free",
         "/ai-video-for-apartment",
+        "/en/",
+        "/es/",
+        "/de/",
+        "/da/",
       ],
       disallow: [
         "/dashboard",

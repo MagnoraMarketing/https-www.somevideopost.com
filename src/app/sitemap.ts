@@ -35,44 +35,50 @@ export default function sitemap(): MetadataRoute.Sitemap {
     })),
   ];
 
+  // da-default pages: bare URL is Danish, en/es/de are prefixed.
+  const daDefaultSlugs = ["hvorfor-somevideopost", "priser"];
+  const daDefaultPages: MetadataRoute.Sitemap = daDefaultSlugs.flatMap((slug) => {
+    const languages = {
+      da: `${BASE}/${slug}`,
+      en: `${BASE}/en/${slug}`,
+      es: `${BASE}/es/${slug}`,
+      de: `${BASE}/de/${slug}`,
+      "x-default": `${BASE}/${slug}`,
+    };
+    return [
+      { url: `${BASE}/${slug}`, lastModified: now, changeFrequency: "monthly" as const, priority: 0.9, alternates: { languages } },
+      ...LOCALES.map((loc) => ({
+        url: `${BASE}/${loc}/${slug}`,
+        lastModified: now,
+        changeFrequency: "monthly" as const,
+        priority: 0.8,
+        alternates: { languages },
+      })),
+    ];
+  });
+
+  // en-default pillar pages: bare URL is the English canonical, da/es/de are prefixed.
+  const enDefaultSlugs = ["some-ai-video", "ai-video-for-real-estate", "generate-ai-video-free", "ai-video-for-apartment"];
+  const enDefaultPages: MetadataRoute.Sitemap = enDefaultSlugs.flatMap((slug) => {
+    const languages = {
+      en: `${BASE}/${slug}`,
+      da: `${BASE}/da/${slug}`,
+      es: `${BASE}/es/${slug}`,
+      de: `${BASE}/de/${slug}`,
+      "x-default": `${BASE}/${slug}`,
+    };
+    return [
+      { url: `${BASE}/${slug}`, lastModified: now, changeFrequency: "monthly" as const, priority: 0.9, alternates: { languages } },
+      { url: `${BASE}/da/${slug}`, lastModified: now, changeFrequency: "monthly" as const, priority: 0.8, alternates: { languages } },
+      { url: `${BASE}/es/${slug}`, lastModified: now, changeFrequency: "monthly" as const, priority: 0.8, alternates: { languages } },
+      { url: `${BASE}/de/${slug}`, lastModified: now, changeFrequency: "monthly" as const, priority: 0.8, alternates: { languages } },
+    ];
+  });
+
   return [
     ...landingPages,
-    {
-      url: `${BASE}/hvorfor-somevideopost`,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.9,
-    },
-    {
-      url: `${BASE}/priser`,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.9,
-    },
-    {
-      url: `${BASE}/some-ai-video`,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.9,
-    },
-    {
-      url: `${BASE}/ai-video-for-real-estate`,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.9,
-    },
-    {
-      url: `${BASE}/generate-ai-video-free`,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.9,
-    },
-    {
-      url: `${BASE}/ai-video-for-apartment`,
-      lastModified: now,
-      changeFrequency: "monthly",
-      priority: 0.9,
-    },
+    ...daDefaultPages,
+    ...enDefaultPages,
     {
       url: `${BASE}/blog`,
       lastModified: now,
