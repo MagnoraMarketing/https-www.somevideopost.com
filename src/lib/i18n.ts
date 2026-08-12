@@ -79,6 +79,41 @@ export const APP_LABELS: Record<Locale, {
   },
 };
 
+// ── Shared site chrome (header/footer used across sub-pages) ──────────────
+export type ChromeT = {
+  navHome: string; navFeatures: string; navVideo: string;
+  navWhy: string; navBlog: string; navPricing: string; navLogin: string; navStart: string;
+  footerWhy: string; footerBlog: string; footerAiVideoHeading: string;
+  someAiVideoLabel: string; realEstateVideoLabel: string; freeVideoLabel: string; apartmentVideoLabel: string;
+};
+
+export const CHROME: Record<Locale, ChromeT> = {
+  da: {
+    navHome: "Forside", navFeatures: "Funktioner", navVideo: "Video",
+    navWhy: "Hvorfor os", navBlog: "Blog", navPricing: "Priser", navLogin: "Log ind", navStart: "Kom i gang",
+    footerWhy: "Hvorfor somevideopost.com", footerBlog: "Blog", footerAiVideoHeading: "AI Video",
+    someAiVideoLabel: "SoMe AI Video", realEstateVideoLabel: "AI Video til Boliger", freeVideoLabel: "Gratis AI Video", apartmentVideoLabel: "AI Video til Lejligheder",
+  },
+  en: {
+    navHome: "Home", navFeatures: "Features", navVideo: "Video",
+    navWhy: "Why us", navBlog: "Blog", navPricing: "Pricing", navLogin: "Log in", navStart: "Get started",
+    footerWhy: "Why somevideopost.com", footerBlog: "Blog", footerAiVideoHeading: "AI Video",
+    someAiVideoLabel: "SoMe AI Video", realEstateVideoLabel: "AI Video for Real Estate", freeVideoLabel: "Generate AI Video Free", apartmentVideoLabel: "AI Video for Apartment",
+  },
+  es: {
+    navHome: "Inicio", navFeatures: "Características", navVideo: "Vídeo",
+    navWhy: "Por qué nosotros", navBlog: "Blog", navPricing: "Precios", navLogin: "Iniciar sesión", navStart: "Comenzar",
+    footerWhy: "Por qué somevideopost.com", footerBlog: "Blog", footerAiVideoHeading: "Vídeo IA",
+    someAiVideoLabel: "Vídeo IA para Redes Sociales", realEstateVideoLabel: "Vídeo IA Inmobiliario", freeVideoLabel: "Vídeo IA Gratis", apartmentVideoLabel: "Vídeo IA para Apartamentos",
+  },
+  de: {
+    navHome: "Startseite", navFeatures: "Funktionen", navVideo: "Video",
+    navWhy: "Warum wir", navBlog: "Blog", navPricing: "Preise", navLogin: "Anmelden", navStart: "Loslegen",
+    footerWhy: "Warum somevideopost.com", footerBlog: "Blog", footerAiVideoHeading: "KI-Video",
+    someAiVideoLabel: "KI-Video für Social Media", realEstateVideoLabel: "KI-Video für Immobilien", freeVideoLabel: "Kostenloses KI-Video", apartmentVideoLabel: "KI-Video für Wohnungen",
+  },
+};
+
 // ── Landing page translations ──────────────────────────────────────────────
 export type LandingT = {
   // nav

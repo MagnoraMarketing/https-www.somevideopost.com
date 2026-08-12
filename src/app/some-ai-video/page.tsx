@@ -133,7 +133,7 @@ export default function SomeAiVideoPage() {
   return (
     <div className="flex min-h-screen flex-col text-slate-100" style={{ background: "#050d24" }}>
       <JsonLd data={jsonLd} />
-      <SiteHeader />
+      <SiteHeader locale="en" />
 
       {/* ── Hero ── */}
       <section className="relative overflow-hidden py-20 md:py-28" style={{ background: "linear-gradient(135deg, #040a1c 0%, #071233 55%, #0a1f4d 100%)" }}>
@@ -299,7 +299,7 @@ export default function SomeAiVideoPage() {
         </div>
       </section>
 
-      <SiteFooter />
+      <SiteFooter locale="en" />
     </div>
   );
 }
