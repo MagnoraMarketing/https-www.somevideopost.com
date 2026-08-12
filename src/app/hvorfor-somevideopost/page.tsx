@@ -399,10 +399,7 @@ export default function WhySomeVideoPostPage() {
         </div>
       </section>
 
-      <UseCaseLinks
-        heading="AI video til hvert formål"
-        subheading="somevideopost.com laver AI-video ud fra et link eller dine billeder — uanset om det er til sociale medier, boligsalg eller udlejning."
-      />
+      <UseCaseLinks locale="da" />
 
       {/* ── FAQ ── */}
       <section className="py-24">

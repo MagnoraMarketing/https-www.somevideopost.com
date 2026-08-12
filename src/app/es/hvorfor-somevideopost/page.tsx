@@ -398,10 +398,7 @@ export default function WhySomeVideoPostEsPage() {
         </div>
       </section>
 
-      <UseCaseLinks
-        heading="Vídeo IA para cada propósito"
-        subheading="somevideopost.com crea vídeo IA a partir de un enlace o tus fotos — ya sea para redes sociales, venta de propiedades o alquiler."
-      />
+      <UseCaseLinks locale="es" />
 
       {/* ── FAQ ── */}
       <section className="py-24">

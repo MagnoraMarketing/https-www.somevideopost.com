@@ -246,7 +246,7 @@ export default async function GenerateAiVideoFreePage() {
         </div>
       </section>
 
-      <UseCaseLinks current="/generate-ai-video-free" />
+      <UseCaseLinks current="/generate-ai-video-free" locale="en" />
 
       {/* ── CTA ── */}
       <section className="relative overflow-hidden py-20 text-white" style={{ background: "linear-gradient(135deg, #040a1c 0%, #0a1f4d 100%)" }}>

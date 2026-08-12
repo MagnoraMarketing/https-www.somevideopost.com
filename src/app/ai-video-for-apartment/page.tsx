@@ -267,7 +267,7 @@ export default function AiVideoForApartmentPage() {
         </div>
       </section>
 
-      <UseCaseLinks current="/ai-video-for-apartment" />
+      <UseCaseLinks current="/ai-video-for-apartment" locale="en" />
 
       {/* ── CTA ── */}
       <section className="relative overflow-hidden py-20 text-white" style={{ background: "linear-gradient(135deg, #040a1c 0%, #0a1f4d 100%)" }}>

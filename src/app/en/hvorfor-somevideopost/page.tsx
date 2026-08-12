@@ -399,7 +399,7 @@ export default function WhySomeVideoPostEnPage() {
         </div>
       </section>
 
-      <UseCaseLinks />
+      <UseCaseLinks locale="en" />
 
       {/* ── FAQ ── */}
       <section className="py-24">

@@ -400,10 +400,7 @@ export default function WhySomeVideoPostDePage() {
         </div>
       </section>
 
-      <UseCaseLinks
-        heading="KI-Video für jeden Zweck"
-        subheading="somevideopost.com erstellt KI-Video aus einem Link oder deinen Fotos — egal ob für soziale Medien, Immobilienverkauf oder Vermietung."
-      />
+      <UseCaseLinks locale="de" />
 
       {/* ── FAQ ── */}
       <section className="py-24">

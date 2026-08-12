@@ -19,7 +19,16 @@ export const metadata: Metadata = {
     "SoMe AI video turns a link or a handful of photos into a scroll-stopping social media video — ready for Instagram Reels, TikTok, Facebook and LinkedIn in minutes. See how it works, what you get, and try it free.",
   keywords:
     "SoMe AI video, AI video for social media, AI generated video Instagram, AI video TikTok, social media video generator, AI reels generator, AI video maker for social media, somevideopost SoMe video",
-  alternates: { canonical: PAGE_URL },
+  alternates: {
+    canonical: PAGE_URL,
+    languages: {
+      en: PAGE_URL,
+      da: `${BASE}/da/some-ai-video`,
+      es: `${BASE}/es/some-ai-video`,
+      de: `${BASE}/de/some-ai-video`,
+      "x-default": PAGE_URL,
+    },
+  },
   openGraph: {
     title: "SoMe AI Video: Create AI-Generated Video for Social Media",
     description:
@@ -278,7 +287,7 @@ export default function SomeAiVideoPage() {
         </div>
       </section>
 
-      <UseCaseLinks current="/some-ai-video" />
+      <UseCaseLinks current="/some-ai-video" locale="en" />
 
       {/* ── CTA ── */}
       <section className="relative overflow-hidden py-20 text-white" style={{ background: "linear-gradient(135deg, #040a1c 0%, #0a1f4d 100%)" }}>

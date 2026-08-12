@@ -20,7 +20,16 @@ export const metadata: Metadata = {
     "AI video for real estate: turn a listing link or property photos into a cinematic presentation video in minutes. Built for agents, agencies and property managers marketing estates, homes and apartments.",
   keywords:
     "AI video for estate, AI video for real estate, real estate video generator, AI property video, listing video AI, estate marketing video, AI walkthrough video, real estate social media video, property presentation video",
-  alternates: { canonical: PAGE_URL },
+  alternates: {
+    canonical: PAGE_URL,
+    languages: {
+      en: PAGE_URL,
+      da: `${BASE}/da/ai-video-for-real-estate`,
+      es: `${BASE}/es/ai-video-for-real-estate`,
+      de: `${BASE}/de/ai-video-for-real-estate`,
+      "x-default": PAGE_URL,
+    },
+  },
   openGraph: {
     title: "AI Video for Real Estate & Estate Listings",
     description:
@@ -269,7 +278,7 @@ export default function AiVideoForRealEstatePage() {
         </div>
       </section>
 
-      <UseCaseLinks current="/ai-video-for-real-estate" />
+      <UseCaseLinks current="/ai-video-for-real-estate" locale="en" />
 
       {/* ── CTA ── */}
       <section className="relative overflow-hidden py-20 text-white" style={{ background: "linear-gradient(135deg, #040a1c 0%, #0a1f4d 100%)" }}>
