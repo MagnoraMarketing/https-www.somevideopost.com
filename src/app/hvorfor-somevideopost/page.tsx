@@ -9,6 +9,7 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { WorkflowDemo } from "@/components/workflow-demo";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
+import { UseCaseLinks } from "@/components/seo/use-case-links";
 import { LANDING } from "@/lib/i18n";
 
 const BASE = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.somevideopost.com";
@@ -391,6 +392,11 @@ export default function WhySomeVideoPostPage() {
           </div>
         </div>
       </section>
+
+      <UseCaseLinks
+        heading="AI video til hvert formål"
+        subheading="somevideopost.com laver AI-video ud fra et link eller dine billeder — uanset om det er til sociale medier, boligsalg eller udlejning."
+      />
 
       {/* ── FAQ ── */}
       <section className="py-24">

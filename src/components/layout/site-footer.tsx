@@ -15,8 +15,8 @@ export function SiteFooter() {
   return (
     <footer className="border-t border-white/5" style={{ background: "#04091c" }}>
       <div className="mx-auto max-w-6xl px-6 py-16">
-        <div className="grid gap-12 md:grid-cols-4">
-          <div className="md:col-span-1">
+        <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="sm:col-span-2 lg:col-span-1">
             <div className="flex items-center gap-2">
               <span className="flex h-9 w-9 items-center justify-center rounded-xl text-sm font-bold text-white" style={{ background: ORANGE_GRADIENT }}>s</span>
               <BrandWordmark />
@@ -46,6 +46,15 @@ export function SiteFooter() {
               <li><Link href="/blog" className="transition-colors hover:text-white">Blog</Link></li>
               <li><Link href="/signup" className="transition-colors hover:text-white">Opret konto</Link></li>
               <li><Link href="/login" className="transition-colors hover:text-white">Log ind</Link></li>
+            </ul>
+          </div>
+          <div>
+            <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-slate-500">AI Video</p>
+            <ul className="flex flex-col gap-3 text-sm text-slate-400">
+              <li><Link href="/some-ai-video" className="transition-colors hover:text-white">SoMe AI Video</Link></li>
+              <li><Link href="/ai-video-for-real-estate" className="transition-colors hover:text-white">AI Video for Real Estate</Link></li>
+              <li><Link href="/ai-video-for-apartment" className="transition-colors hover:text-white">AI Video for Apartment</Link></li>
+              <li><Link href="/generate-ai-video-free" className="transition-colors hover:text-white">Generate AI Video Free</Link></li>
             </ul>
           </div>
           <div>
