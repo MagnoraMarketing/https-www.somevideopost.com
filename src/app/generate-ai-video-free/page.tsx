@@ -21,7 +21,16 @@ export const metadata: Metadata = {
     "You can generate and preview an AI video on somevideopost.com for free — no card required to start. See exactly what's free, what a full video costs to unlock, and how the whole process works.",
   keywords:
     "generate AI video free, free AI video generator, AI video for free, create AI video no cost, free AI video maker, AI video generator free trial",
-  alternates: { canonical: PAGE_URL },
+  alternates: {
+    canonical: PAGE_URL,
+    languages: {
+      en: PAGE_URL,
+      da: `${BASE}/da/generate-ai-video-free`,
+      es: `${BASE}/es/generate-ai-video-free`,
+      de: `${BASE}/de/generate-ai-video-free`,
+      "x-default": PAGE_URL,
+    },
+  },
   openGraph: {
     title: "Generate AI Video Free: How to Create Your First Video at No Cost",
     description:
