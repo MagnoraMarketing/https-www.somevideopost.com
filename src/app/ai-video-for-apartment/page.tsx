@@ -20,7 +20,16 @@ export const metadata: Metadata = {
     "AI video for apartments turns photos or a listing link into an interior-focused presentation video — built for apartment rentals, property managers and short-term let hosts marketing units.",
   keywords:
     "AI video for apartment, apartment video generator, AI apartment interior video, apartment listing video, apartment marketing video, AI video apartment rental, property management video AI",
-  alternates: { canonical: PAGE_URL },
+  alternates: {
+    canonical: PAGE_URL,
+    languages: {
+      en: PAGE_URL,
+      da: `${BASE}/da/ai-video-for-apartment`,
+      es: `${BASE}/es/ai-video-for-apartment`,
+      de: `${BASE}/de/ai-video-for-apartment`,
+      "x-default": PAGE_URL,
+    },
+  },
   openGraph: {
     title: "AI Video for Apartment Listings & Interiors",
     description:
