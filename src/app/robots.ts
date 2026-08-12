@@ -6,7 +6,22 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
       userAgent: "*",
-      allow: ["/", "/hvorfor-somevideopost", "/blog", "/priser", "/login", "/signup"],
+      allow: [
+        "/",
+        "/hvorfor-somevideopost",
+        "/blog",
+        "/priser",
+        "/login",
+        "/signup",
+        "/some-ai-video",
+        "/ai-video-for-real-estate",
+        "/generate-ai-video-free",
+        "/ai-video-for-apartment",
+        "/en/",
+        "/es/",
+        "/de/",
+        "/da/",
+      ],
       disallow: [
         "/dashboard",
         "/videos",

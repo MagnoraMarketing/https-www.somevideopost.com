@@ -5,6 +5,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { CinematicWalkthrough } from "@/components/walkthrough/cinematic-walkthrough";
 import { JsonLd } from "@/components/seo/json-ld";
+import { FreeTrialCTA } from "@/components/blog/free-trial-cta";
 import { CATEGORIES, POSTS, formatDate } from "@/lib/blog";
 
 const BASE = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.somevideopost.com";
@@ -204,6 +205,8 @@ export default function BlogPage() {
             </p>
           </div>
         </section>
+
+        <FreeTrialCTA locale="da" />
       </div>
 
       <SiteFooter />

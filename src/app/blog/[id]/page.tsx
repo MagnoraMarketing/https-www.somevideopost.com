@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowRight, Clock, CalendarDays } from "lucide-react";
 import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { JsonLd } from "@/components/seo/json-ld";
+import { FreeTrialCTA } from "@/components/blog/free-trial-cta";
 import { POSTS, getPost, getCategory, formatDate, articleBody } from "@/lib/blog";
 
 const BASE = process.env.NEXT_PUBLIC_APP_URL ?? "https://www.somevideopost.com";
@@ -120,24 +121,29 @@ export default async function BlogArticlePage({ params }: { params: Promise<{ id
           ))}
         </div>
 
-        {/* CTA */}
-        <div
-          className="mt-12 rounded-2xl p-8 text-center text-white"
-          style={{ background: "linear-gradient(135deg, #1B3F7A 0%, #14306b 100%)" }}
-        >
-          <h2 className="text-xl font-bold">Prøv SOME VIDEO POST gratis</h2>
-          <p className="mx-auto mt-2 max-w-md text-sm text-blue-200">
-            Gå fra boliglink til færdigt opslag og cinematisk video på minutter. Intet kreditkort påkrævet.{" "}
-            <Link href="/hvorfor-somevideopost" className="font-semibold text-white underline underline-offset-2">
-              Læs hvorfor udlejere vælger somevideopost.com
-            </Link>.
-          </p>
+        {/* Related tool */}
+        {post.relatedTool && (
           <Link
-            href="/signup"
-            className="mt-6 inline-flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-slate-900 transition hover:bg-slate-100"
+            href={post.relatedTool.href}
+            className="group mt-10 flex items-center gap-4 rounded-2xl border border-blue-200 bg-blue-50 p-5 transition hover:border-blue-300 hover:bg-blue-100/60"
           >
-            Opret gratis konto <ArrowRight size={15} />
+            <div className="flex-1">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-blue-600">Relateret værktøj</p>
+              <p className="mt-1 font-bold text-slate-900">{post.relatedTool.label}</p>
+              <p className="mt-1 text-sm text-slate-600">{post.relatedTool.blurb}</p>
+            </div>
+            <ArrowRight size={18} className="shrink-0 text-blue-600 transition-transform group-hover:translate-x-0.5" />
           </Link>
+        )}
+
+        {/* CTA */}
+        <div className="mt-10">
+          <FreeTrialCTA locale="da" />
+          <p className="mt-3 text-center text-xs text-slate-400">
+            <Link href="/hvorfor-somevideopost" className="font-medium text-blue-700 underline underline-offset-2 hover:text-blue-800">
+              Læs hvorfor udlejere vælger somevideopost.com
+            </Link>
+          </p>
         </div>
 
         {/* Related */}

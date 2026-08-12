@@ -5,7 +5,7 @@ import {
   TrendingUp, Play, Globe, Link2,
 } from "lucide-react";
 import type { Locale } from "@/lib/i18n";
-import { LANDING, LOCALE_PATHS } from "@/lib/i18n";
+import { CHROME, LANDING, LOCALE_PATHS } from "@/lib/i18n";
 import { currencyForLocale, formatPriceKey } from "@/lib/currency";
 import { DemoPhoneSwitcher } from "@/components/demo-phone-switcher";
 import { WorkflowDemo } from "@/components/workflow-demo";
@@ -214,6 +214,7 @@ function Testimonial({ name, role, quote }: { name: string; role: string; quote:
 
 export function LandingPage({ locale }: { locale: Locale }) {
   const t = LANDING[locale];
+  const c = CHROME[locale];
   const currency = currencyForLocale(locale);
 
   return (
@@ -231,8 +232,8 @@ export function LandingPage({ locale }: { locale: Locale }) {
             <a href="#" className="hover:text-white transition-colors">{t.navHome}</a>
             <a href="#features" className="hover:text-white transition-colors">{t.navFeatures}</a>
             <a href="#ai" className="hover:text-white transition-colors">{t.navVideo}</a>
-            <Link href="/hvorfor-somevideopost" className="hover:text-white transition-colors">Hvorfor os</Link>
-            <Link href="/blog" className="hover:text-white transition-colors">Blog</Link>
+            <Link href="/hvorfor-somevideopost" className="hover:text-white transition-colors">{c.navWhy}</Link>
+            <Link href="/blog" className="hover:text-white transition-colors">{c.navBlog}</Link>
             <Link href="/priser" className="hover:text-white transition-colors">{t.navPricing}</Link>
           </nav>
           <div className="flex items-center gap-3">
@@ -245,7 +246,8 @@ export function LandingPage({ locale }: { locale: Locale }) {
               { href: LOCALE_PATHS[locale], label: t.navHome },
               { href: `${LOCALE_PATHS[locale]}#features`, label: t.navFeatures, external: true },
               { href: `${LOCALE_PATHS[locale]}#ai`, label: t.navVideo, external: true },
-              { href: "/blog", label: "Blog" },
+              { href: "/hvorfor-somevideopost", label: c.navWhy },
+              { href: "/blog", label: c.navBlog },
               { href: "/priser", label: t.navPricing },
               { href: "/login", label: t.navLogin },
             ]} />
@@ -597,8 +599,8 @@ export function LandingPage({ locale }: { locale: Locale }) {
       {/* ── Footer ── */}
       <footer className="border-t border-white/5" style={{ background: "#04091c" }}>
         <div className="mx-auto max-w-6xl px-6 py-16">
-          <div className="grid gap-12 md:grid-cols-4">
-            <div className="md:col-span-1">
+          <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-5">
+            <div className="sm:col-span-2 lg:col-span-1">
               <div className="flex items-center gap-2">
                 <span className="flex h-9 w-9 items-center justify-center rounded-xl text-sm font-bold text-white" style={{ background: ORANGE_GRADIENT }}>s</span>
                 <Wordmark />
@@ -621,11 +623,20 @@ export function LandingPage({ locale }: { locale: Locale }) {
               <ul className="flex flex-col gap-3 text-sm text-slate-400">
                 <li><a href="#features" className="transition-colors hover:text-white">{t.footerFeatures}</a></li>
                 <li><a href="#ai" className="transition-colors hover:text-white">{t.footerAiVideo}</a></li>
-                <li><Link href="/hvorfor-somevideopost" className="transition-colors hover:text-white">Hvorfor somevideopost.com</Link></li>
+                <li><Link href="/hvorfor-somevideopost" className="transition-colors hover:text-white">{c.footerWhy}</Link></li>
                 <li><Link href="/priser" className="transition-colors hover:text-white">{t.footerPricing}</Link></li>
-                <li><Link href="/blog" className="transition-colors hover:text-white">Blog</Link></li>
+                <li><Link href="/blog" className="transition-colors hover:text-white">{c.footerBlog}</Link></li>
                 <li><Link href="/signup" className="transition-colors hover:text-white">{t.footerCreateAccount}</Link></li>
                 <li><Link href="/login" className="transition-colors hover:text-white">{t.footerLogin}</Link></li>
+              </ul>
+            </div>
+            <div>
+              <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-slate-500">{c.footerAiVideoHeading}</p>
+              <ul className="flex flex-col gap-3 text-sm text-slate-400">
+                <li><Link href="/some-ai-video" className="transition-colors hover:text-white">{c.someAiVideoLabel}</Link></li>
+                <li><Link href="/ai-video-for-real-estate" className="transition-colors hover:text-white">{c.realEstateVideoLabel}</Link></li>
+                <li><Link href="/ai-video-for-apartment" className="transition-colors hover:text-white">{c.apartmentVideoLabel}</Link></li>
+                <li><Link href="/generate-ai-video-free" className="transition-colors hover:text-white">{c.freeVideoLabel}</Link></li>
               </ul>
             </div>
             <div>
