@@ -18,12 +18,22 @@ security definer
 set search_path = public
 as $$
 begin
-  insert into ai_credits (user_id, balance)
-  values (new.id, 2)
-  on conflict (user_id) do nothing;
+  -- This runs inside the signup transaction: anything raised here aborts the
+  -- INSERT into auth.users and the account is never created, surfacing to the
+  -- user as an opaque "Database error saving new user". A missing free credit
+  -- is never worth blocking a signup over, so swallow any failure and let the
+  -- account through — /api/generate-post grants the allowance on first use if
+  -- the row is absent.
+  begin
+    insert into ai_credits (user_id, balance)
+    values (new.id, 2)
+    on conflict (user_id) do nothing;
 
-  insert into credit_transactions (user_id, amount, description)
-  values (new.id, 2, 'Gratis opslag ved oprettelse');
+    insert into credit_transactions (user_id, amount, description)
+    values (new.id, 2, 'Gratis opslag ved oprettelse');
+  exception when others then
+    raise warning 'grant_signup_post_credits failed for %: %', new.id, sqlerrm;
+  end;
 
   return new;
 end;
