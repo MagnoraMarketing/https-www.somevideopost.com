@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import axios from "axios";
 
+// Five parallel Imagen calls, each up to 30s.
+// 60s is the Vercel Hobby ceiling; without this the route is cut off at 10s.
+export const maxDuration = 60;
+
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY ?? "";
 
 const STYLES = [

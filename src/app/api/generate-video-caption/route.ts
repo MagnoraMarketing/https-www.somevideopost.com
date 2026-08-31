@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import Anthropic from "@anthropic-ai/sdk";
 
+// Anthropic generation can exceed the 10s default.
+// 60s is the Vercel Hobby ceiling; without this the route is cut off at 10s.
+export const maxDuration = 60;
+
 // Tone per platform for a caption that accompanies a cinematic presentation video.
 const PLATFORM_TONE: Record<string, string> = {
   facebook:

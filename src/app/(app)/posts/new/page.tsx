@@ -64,6 +64,23 @@ const BENEFITS = [
 
 type Account = Awaited<ReturnType<typeof getSocialAccounts>>[number];
 
+type GenerateResponse = { text?: string; error?: string; code?: string };
+
+/**
+ * Read /api/generate-post's reply defensively: a function that times out or
+ * crashes replies with an HTML error page, and calling .json() on that throws —
+ * which previously left the button spinning with no message at all.
+ */
+async function readGenerateResponse(res: Response): Promise<GenerateResponse> {
+  try {
+    return (await res.json()) as GenerateResponse;
+  } catch {
+    return {
+      error: `Serveren svarede uventet (HTTP ${res.status}). Prøv igen om lidt.`,
+    };
+  }
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function GeneratePostPage() {
@@ -137,9 +154,11 @@ export default function GeneratePostPage() {
         listingUrl: url.trim(),
       }),
     });
-    const json = await res.json() as { text?: string; error?: string; wasFree?: boolean };
+    const json = await readGenerateResponse(res);
     setGenerating(false);
-    if (json.error === "no_credits") { setNoCredits(true); return; }
+    // The API signals an empty balance with `code`, not `error` — `error` holds
+    // the human-readable message shown next to the subscribe link.
+    if (json.code === "no_credits") { setNoCredits(true); return; }
     if (json.error || !json.text) { setGenerateError(json.error ?? "Generering fejlede."); return; }
     setGeneratedText(json.text);
     setEditingText(false);
@@ -163,9 +182,11 @@ export default function GeneratePostPage() {
         listingUrl,
       }),
     });
-    const json = await res.json() as { text?: string; error?: string; wasFree?: boolean };
+    const json = await readGenerateResponse(res);
     setGenerating(false);
-    if (json.error === "no_credits") { setNoCredits(true); return; }
+    // The API signals an empty balance with `code`, not `error` — `error` holds
+    // the human-readable message shown next to the subscribe link.
+    if (json.code === "no_credits") { setNoCredits(true); return; }
     if (json.error || !json.text) { setGenerateError(json.error ?? "Generering fejlede."); return; }
     setGeneratedText(json.text);
     setEditingText(false);
