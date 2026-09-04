@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { wanConfigStatus } from "@/lib/wan/client";
+import { ffmpegAvailable } from "@/services/video/assembler";
 
 // Reaches Supabase to check the credit row and storage bucket.
 export const maxDuration = 30;
@@ -19,8 +21,12 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Log ind først" }, { status: 401 });
 
+  const wan = wanConfigStatus();
+
   const env = {
     ANTHROPIC_API_KEY: !!process.env.ANTHROPIC_API_KEY,
+    ALIBABA_CLOUD_API_KEY: !!process.env.ALIBABA_CLOUD_API_KEY,
+    ALIBABA_WORKSPACE_ID: !!process.env.ALIBABA_WORKSPACE_ID,
     GEMINI_API_KEY: !!process.env.GEMINI_API_KEY,
     SUPABASE_SERVICE_ROLE_KEY:
       !!(process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY),
@@ -34,6 +40,7 @@ export async function GET() {
   let creditRow: boolean | string = "ukendt";
   let videosBucket: boolean | string = "ukendt";
   let migrationApplied: boolean | string = "ukendt";
+  let pipelineTables: boolean | string = "ukendt";
 
   try {
     const { createAdminClient } = await import("@/lib/supabase/admin");
@@ -45,6 +52,10 @@ export async function GET() {
       .eq("user_id", user.id)
       .maybeSingle<{ balance: number }>();
     creditRow = !!credits;
+
+    // The pipeline cannot run at all until its own migration has been applied.
+    const { error: sceneErr } = await admin.from("video_scenes").select("id").limit(1);
+    pipelineTables = sceneErr ? `mangler: ${sceneErr.message}` : true;
 
     const { data: buckets, error } = await admin.storage.listBuckets();
     if (error) {
@@ -72,7 +83,28 @@ export async function GET() {
     );
   }
   if (!env.GEMINI_API_KEY) {
-    blockers.push("GEMINI_API_KEY mangler i Vercel — videoer kan ikke genereres.");
+    blockers.push(
+      "GEMINI_API_KEY mangler i Vercel — AI Director kan ikke analysere boligbilleder " +
+        "(pipelinen falder tilbage til deterministisk billedvalg).",
+    );
+  }
+  if (!wan.ok) {
+    blockers.push(
+      `${wan.missing.join(" og ")} mangler i Vercel — WAN 3.0 kan ikke generere klip. ` +
+        "Tjek /api/test/wan.",
+    );
+  }
+  if (!ffmpegAvailable()) {
+    blockers.push(
+      "Ingen ffmpeg-binær på serveren — den færdige 15-sekunders video kan ikke samles. " +
+        "Sæt FFMPEG_PATH eller sørg for at ffmpeg-static er installeret.",
+    );
+  }
+  if (pipelineTables !== true) {
+    blockers.push(
+      "Migrationen er ikke kørt: video_scenes findes ikke i Supabase. " +
+        "Kør supabase/migrations/20260904_012_property_video_pipeline.sql.",
+    );
   }
   if (videosBucket === false) {
     blockers.push(
@@ -83,7 +115,9 @@ export async function GET() {
 
   return NextResponse.json({
     env,
-    supabase: { creditRow, videosBucket, migrationApplied },
+    wan: { configured: wan.ok, missing: wan.missing, model: wan.model, region: wan.region },
+    assembly: { ffmpeg: ffmpegAvailable() },
+    supabase: { creditRow, videosBucket, migrationApplied, pipelineTables },
     blockers,
     ok: blockers.length === 0,
   });

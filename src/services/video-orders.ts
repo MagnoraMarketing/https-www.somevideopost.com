@@ -77,12 +77,27 @@ export async function restartVideoOrder(orderId: string): Promise<{ error?: stri
 
   const { data: order } = await supabase
     .from("video_orders")
-    .select("image_urls, title")
+    .select("image_urls, title, job_state, source_url")
     .eq("id", orderId)
     .eq("user_id", user.id)
     .single();
 
   if (!order) return { error: "Ordre ikke fundet" };
+
+  // Orders created by the property-video pipeline restart inside it — they
+  // have source images, a storyboard and scenes, none of which the legacy
+  // Veo path below knows about.
+  if (order.job_state && order.job_state !== "pending") {
+    const { restartVideoJob } = await import("@/services/video-jobs");
+    // Re-import from the listing when there is one; otherwise re-analyse the
+    // photographs already in storage.
+    const from = order.source_url ? "pending" : "analyzing_images";
+    const res = await restartVideoJob(orderId, from);
+    if (res.error) return res;
+    revalidatePath("/videos");
+    revalidatePath(`/videos/${orderId}`);
+    return {};
+  }
 
   const imageUrls: string[] = order.image_urls ?? [];
   if (!imageUrls.length) return { error: "Ingen billeder på ordren" };

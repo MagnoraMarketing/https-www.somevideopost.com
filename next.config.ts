@@ -1,7 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["playwright-core"],
+  // ffmpeg-static resolves a binary at runtime rather than being bundled, so
+  // it must stay external for the assembler to find it on the server.
+  serverExternalPackages: ["playwright-core", "ffmpeg-static"],
+  outputFileTracingIncludes: {
+    // The final render spawns the binary, which the bundler cannot see as a
+    // dependency; without this the assembly step has nothing to execute.
+    "/api/video-jobs/**": ["./node_modules/ffmpeg-static/ffmpeg"],
+  },
   async redirects() {
     // Locale-prefixed auth routes don't exist — the auth pages live at the
     // root (/login, /signup). Redirect at the edge so /es/login etc. never
