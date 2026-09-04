@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getVideoJobsStatus } from "@/lib/google-video";
 
+// Polls Veo and streams finished clips into Supabase Storage.
+// 60s is the Vercel Hobby ceiling; without this the route is cut off at 10s.
+export const maxDuration = 60;
+
 // A real Veo job finishes in minutes; anything still processing after this is
 // stuck, so fail it instead of showing a progress bar that lingers for hours.
 const MAX_PROCESSING_MS = 30 * 60 * 1000; // 30 minutes

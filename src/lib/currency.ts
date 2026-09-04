@@ -57,6 +57,10 @@ export type PriceKey = keyof typeof PRICES;
 // ~€10 worth of posts at 5 kr each.
 export const MONTHLY_POST_CREDITS = 15;
 
+// Free post-credits every new account starts with, matching what the marketing
+// pages promise ("2 gratis opslag ved oprettelse — intet kreditkort påkrævet").
+export const FREE_SIGNUP_POSTS = 2;
+
 export function priceAmount(key: PriceKey, currency: Currency): number {
   return PRICES[key][currency];
 }

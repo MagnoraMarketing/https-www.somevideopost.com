@@ -16,6 +16,23 @@ async function applyPreferenceCookies(locale: Locale, currency: Currency) {
   store.set("currency", currency, PREF_COOKIE);
 }
 
+/**
+ * Turn a Supabase auth error into something a user can act on.
+ *
+ * supabase-js sets `message` to a stringified empty body ("{}") when GoTrue
+ * replies with an error shape it cannot parse — typically a 500 from a failing
+ * database trigger during signup. Rendering that verbatim shows the user a
+ * literal "{}" and tells them nothing, so fall back to the status code.
+ */
+function authErrorMessage(error: { message?: string; status?: number }): string {
+  const raw = (error.message ?? "").trim();
+  if (raw && raw !== "{}" && raw !== "[object Object]") return raw;
+  if (error.status && error.status >= 500) {
+    return "Kontoen kunne ikke oprettes på grund af en serverfejl. Prøv igen om lidt — hvis det bliver ved, er der en fejl i databasen (fejl " + error.status + ").";
+  }
+  return "Kontoen kunne ikke oprettes. Kontrollér din email og adgangskode, og prøv igen.";
+}
+
 export async function signUpAction(
   _prevState: AuthFormState,
   formData: FormData
@@ -44,7 +61,7 @@ export async function signUpAction(
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -62,10 +79,31 @@ export async function signUpAction(
   });
 
   if (error) {
-    return { error: error.message };
+    // The user-facing text is deliberately vague when the message is unusable;
+    // log the full error so the real cause is visible server-side.
+    console.error("Sign-up failed", {
+      status: error.status,
+      name: error.name,
+      code: error.code,
+      message: error.message,
+    });
+    return { error: authErrorMessage(error) };
   }
 
   await applyPreferenceCookies(locale, currency);
+
+  // With email confirmation enabled, signUp succeeds but issues no session.
+  // Redirecting to /dashboard then bounces straight back to /login, which looks
+  // exactly like the signup silently failing — so say what actually happened.
+  if (!data.session) {
+    return {
+      notice:
+        "Din konto er oprettet. Vi har sendt en bekræftelsesmail til " +
+        email +
+        " — bekræft din adresse, og log derefter ind.",
+    };
+  }
+
   redirect("/dashboard");
 }
 

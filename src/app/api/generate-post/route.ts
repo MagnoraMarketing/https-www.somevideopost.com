@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { FREE_SIGNUP_POSTS } from "@/lib/currency";
 import Anthropic from "@anthropic-ai/sdk";
+
+// Anthropic generation can exceed the 10s default.
+// 60s is the Vercel Hobby ceiling; without this the route is cut off at 10s.
+export const maxDuration = 60;
 
 const PLATFORM_INSTRUCTIONS: Record<string, string> = {
   facebook: `
@@ -27,12 +33,32 @@ export async function POST(req: NextRequest) {
   }
 
   // Each generated post costs 1 credit (= 5 kr), drawn from the monthly balance.
-  const { data: credits } = await supabase
+  // ai_credits exposes only `select` to end users, so the balance must be read
+  // and written with the service-role client — a cookie-bound client has its
+  // updates silently dropped by RLS, leaving the balance permanently stale.
+  const admin = createAdminClient();
+  const { data: credits } = await admin
     .from("ai_credits")
     .select("balance")
     .eq("user_id", user.id)
-    .single();
-  const balance = credits?.balance ?? 0;
+    .maybeSingle<{ balance: number }>();
+
+  // No row means the account was never provisioned. Nothing granted the free
+  // posts the marketing pages promise, so grant them on first use; the row's
+  // existence is what stops it being granted twice.
+  let balance = credits?.balance ?? 0;
+  if (!credits) {
+    balance = FREE_SIGNUP_POSTS;
+    await admin
+      .from("ai_credits")
+      .upsert({ user_id: user.id, balance }, { onConflict: "user_id" });
+    await admin.from("credit_transactions").insert({
+      user_id: user.id,
+      amount: FREE_SIGNUP_POSTS,
+      description: "Gratis opslag ved oprettelse",
+    });
+  }
+
   if (balance < 1) {
     return NextResponse.json(
       { error: "Ingen saldo tilbage. Tegn abonnementet for at generere opslag.", code: "no_credits" },
@@ -85,8 +111,8 @@ Returner KUN den færdige tekst — ingen forklaringer, ingen overskrifter, inge
     const text = content.text.trim();
 
     // Charge 1 credit now that generation succeeded, and log the usage.
-    await supabase.from("ai_credits").update({ balance: balance - 1 }).eq("user_id", user.id);
-    await supabase.from("credit_transactions").insert({
+    await admin.from("ai_credits").update({ balance: balance - 1 }).eq("user_id", user.id);
+    await admin.from("credit_transactions").insert({
       user_id: user.id,
       amount: -1,
       description: `AI-opslag (${platform})`,

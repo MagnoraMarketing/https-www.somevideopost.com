@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
 import { startVideoGeneration } from "@/lib/google-video";
 import { MONTHLY_POST_CREDITS } from "@/lib/currency";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import type Stripe from "stripe";
 
 export async function POST(req: NextRequest) {
@@ -16,7 +16,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  const supabase = await createClient();
+  // Webhooks carry no user cookies, so a cookie-bound client authenticates as
+  // `anon`. subscriptions / ai_credits / credit_transactions expose only
+  // `select` to end users, so every write below was silently rejected by RLS:
+  // subscriptions never activated and credits were never granted. The
+  // service-role client is the only correct client here.
+  const supabase = createAdminClient();
 
   switch (event.type) {
     case "checkout.session.completed": {
