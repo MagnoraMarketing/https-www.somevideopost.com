@@ -18,6 +18,10 @@ create policy "Users can manage their own GA4 connection"
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
+-- set_updated_at() is defined in migration 001. This previously named a
+-- function (update_updated_at_column) that no migration ever creates, so the
+-- migration failed outright against a fresh project.
+drop trigger if exists ga4_connections_updated_at on ga4_connections;
 create trigger ga4_connections_updated_at
   before update on ga4_connections
-  for each row execute function update_updated_at_column();
+  for each row execute function set_updated_at();
