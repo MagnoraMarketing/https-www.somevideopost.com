@@ -84,6 +84,7 @@ export type VideoOrder = {
   image_urls: string[];
   title: string | null;
   video_url: string | null;
+  video_urls: string[] | null;
   created_at: string;
 };
 

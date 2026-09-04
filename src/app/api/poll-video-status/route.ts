@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getVideoJobsStatus } from "@/lib/google-video";
+import type { VideoOrder } from "@/types/database";
 
 // Polls Veo and streams finished clips into Supabase Storage.
 // 60s is the Vercel Hobby ceiling; without this the route is cut off at 10s.
@@ -18,11 +19,19 @@ export async function POST() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  // The server client is untyped, so name the shape the select actually returns
+  // rather than reaching for `any` at each column below.
+  type PollableOrder = Pick<
+    VideoOrder,
+    "id" | "video_job_id" | "video_job_ids" | "status" | "created_at"
+  >;
+
   const { data: orders } = await supabase
     .from("video_orders")
     .select("id, video_job_id, video_job_ids, status, created_at")
     .eq("user_id", user.id)
-    .eq("status", "processing");
+    .eq("status", "processing")
+    .returns<PollableOrder[]>();
 
   if (!orders?.length) return NextResponse.json({ updated: 0 });
 
@@ -34,8 +43,8 @@ export async function POST() {
       // Auto-fail orders stuck for more than 30 minutes with no job IDs
       const age = Date.now() - new Date(order.created_at).getTime();
 
-      const jobIds: string[] = (order as any).video_job_ids?.length
-        ? (order as any).video_job_ids
+      const jobIds: string[] = order.video_job_ids?.length
+        ? order.video_job_ids
         : order.video_job_id
         ? [order.video_job_id]
         : [];

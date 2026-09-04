@@ -1,4 +1,4 @@
-import { CheckCircle2, Sparkles, Video, CreditCard, Zap } from "lucide-react";
+import { CheckCircle2, Sparkles, Video } from "lucide-react";
 import { Topbar } from "@/components/layout/topbar";
 import { getSubscription, getCredits } from "@/services/billing";
 import { SubscribeButton, BuyCreditsButton, BuyVideoButton, ManageBillingButton } from "@/components/billing/billing-buttons";

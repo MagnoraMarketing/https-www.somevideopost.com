@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { Topbar } from "@/components/layout/topbar";
 import { createVideoOrderCheckout } from "@/services/billing";
@@ -31,21 +31,22 @@ function PhotoTour({
   images,
   onRemove,
   onAdd,
-  fileRef,
   uploading,
 }: {
   images: string[];
   onRemove: (i: number) => void;
   onAdd: () => void;
-  fileRef: React.RefObject<HTMLInputElement | null>;
   uploading: boolean;
 }) {
   const [selected, setSelected] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (selected >= images.length && images.length > 0) setSelected(images.length - 1);
-  }, [images.length, selected]);
+  // Removing photos can leave the selection past the end of the strip. Clamp
+  // during render so the corrected index is used for this paint — an effect
+  // would first paint an empty frame for an index that no longer exists.
+  if (images.length > 0 && selected > images.length - 1) {
+    setSelected(images.length - 1);
+  }
 
   function scrollStrip(dir: "left" | "right") {
     scrollRef.current?.scrollBy({ left: dir === "left" ? -120 : 120, behavior: "smooth" });
@@ -139,13 +140,10 @@ function PhotoTour({
 export function NewVideoForm() {
   const searchParams = useSearchParams();
   const [title, setTitle] = useState("");
-  const [bookingUrl, setBookingUrl] = useState("");
+  // Seeded once from ?booking_url= — as an effect this re-applied the param on
+  // every searchParams change and overwrote whatever the user had typed.
+  const [bookingUrl, setBookingUrl] = useState(() => searchParams.get("booking_url") ?? "");
   const [scraped, setScraped] = useState<ScrapedProperty | null>(null);
-
-  useEffect(() => {
-    const urlParam = searchParams.get("booking_url");
-    if (urlParam) setBookingUrl(urlParam);
-  }, [searchParams]);
 
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -393,7 +391,7 @@ export function NewVideoForm() {
                     <p className="mt-1 text-sm text-slate-500">Rækkefølgen bestemmer fotoruten i videoen.</p>
                   </div>
                   {imageUrls.length > 0 ? (
-                    <PhotoTour images={imageUrls} onRemove={removeImage} onAdd={() => fileRef.current?.click()} fileRef={fileRef} uploading={uploading} />
+                    <PhotoTour images={imageUrls} onRemove={removeImage} onAdd={() => fileRef.current?.click()} uploading={uploading} />
                   ) : (
                     <button
                       type="button"

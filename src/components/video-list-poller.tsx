@@ -1,26 +1,24 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export function VideoListPoller({ hasProcessing }: { hasProcessing: boolean }) {
   const router = useRouter();
-  const active = useRef(hasProcessing);
-  active.current = hasProcessing;
 
   useEffect(() => {
     if (!hasProcessing) return;
 
     const tick = async () => {
-      if (!active.current) return;
       try {
-        const res = await fetch("/api/poll-video-status", { method: "POST" });
-        const json = await res.json();
-        if (json.updated > 0) router.refresh();
-        else router.refresh(); // always refresh to show latest state
+        await fetch("/api/poll-video-status", { method: "POST" });
       } catch {
-        // network error — ignore
+        // Network error — the next tick tries again.
+        return;
       }
+      // Refresh regardless of how many rows the poll updated: progress and
+      // elapsed time move on the server even when no status flipped.
+      router.refresh();
     };
 
     tick();

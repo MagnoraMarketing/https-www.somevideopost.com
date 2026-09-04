@@ -36,7 +36,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
   ];
 
   // da-default pages: bare URL is Danish, en/es/de are prefixed.
-  const daDefaultSlugs = ["hvorfor-somevideopost", "priser"];
+  const daDefaultSlugs = [
+    "hvorfor-somevideopost",
+    "priser",
+    "privatlivspolitik",
+    "cookiepolitik",
+    "handelsbetingelser",
+  ];
   const daDefaultPages: MetadataRoute.Sitemap = daDefaultSlugs.flatMap((slug) => {
     const languages = {
       da: `${BASE}/${slug}`,

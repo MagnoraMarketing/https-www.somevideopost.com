@@ -217,7 +217,7 @@ export default async function VideosPage() {
                     </span>
                   </h1>
                   <p className="mt-4 text-lg text-blue-200 leading-relaxed max-w-md">
-                    Lad AI'en skabe en professionel præsentationsvideo af din bolig — klar på under 15 minutter, klar til at dele på sociale medier.
+                    Lad AI&apos;en skabe en professionel præsentationsvideo af din bolig — klar på under 15 minutter, klar til at dele på sociale medier.
                   </p>
                   <div className="mt-6 flex items-center gap-1">
                     {[...Array(5)].map((_, i) => (
@@ -375,7 +375,7 @@ export default async function VideosPage() {
                           <Star key={i} size={13} className="fill-orange-400 text-orange-400" />
                         ))}
                       </div>
-                      <p className="text-sm text-slate-700 leading-relaxed italic">"{t.quote}"</p>
+                      <p className="text-sm text-slate-700 leading-relaxed italic">&ldquo;{t.quote}&rdquo;</p>
                       <div className="mt-4">
                         <p className="text-sm font-semibold text-slate-900">{t.name}</p>
                         <p className="text-xs text-slate-400">{t.role}</p>

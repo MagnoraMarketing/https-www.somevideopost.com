@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useEffect, useCallback, useTransition, useRef } from "react";
 import { CheckCircle2, Loader2, XCircle, Download, Share2, Send, Lock } from "lucide-react";
 import { pollVideoOrder } from "@/services/video-orders";
@@ -118,7 +119,7 @@ function SharePanel({ videoUrl, accounts, caption, setCaption }: { videoUrl: str
           {accounts.length === 0 ? (
             <p className="text-sm text-slate-500">
               Ingen kanaler tilkoblet.{" "}
-              <a href="/accounts/connect" className="text-[#FF6B4A] underline">Tilslut en kanal</a>
+              <Link href="/accounts/connect" className="text-[#FF6B4A] underline">Tilslut en kanal</Link>
             </p>
           ) : (
             <>
@@ -204,7 +205,9 @@ export function VideoStatusClient({ orderId, initialStatus, initialVideoUrl, ini
   const [caption, setCaption] = useState("");
   const [stepIdx, setStepIdx] = useState(0);
   const [elapsedSec, setElapsedSec] = useState(0);
-  const startRef = useRef<number>(Date.now());
+  // Set by the polling effect below before the ticker that reads it starts;
+  // initialising it with Date.now() here only re-ran a clock call per render.
+  const startRef = useRef<number>(0);
 
   const poll = useCallback(async () => {
     const result = await pollVideoOrder(orderId);
@@ -365,7 +368,7 @@ export function VideoStatusClient({ orderId, initialStatus, initialVideoUrl, ini
 
         {isDelayed && (
           <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
-            Dette tager lidt længere end normalt — AI'en arbejder stadig. Du behøver ikke vente her; siden tjekker automatisk og vi sender dig besked, når videoen er klar.
+            Dette tager lidt længere end normalt — AI&apos;en arbejder stadig. Du behøver ikke vente her; siden tjekker automatisk og vi sender dig besked, når videoen er klar.
           </div>
         )}
       </div>

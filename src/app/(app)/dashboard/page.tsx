@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Plus, CalendarClock, Send, Video, Sparkles, ArrowRight, Flame, Target, Users, BarChart2, TrendingUp, TrendingDown, CheckCircle2, Clock, Play } from "lucide-react";
+import { Plus, CalendarClock, Send, Video, Sparkles, ArrowRight, Flame, Target, Users, BarChart2, TrendingUp, TrendingDown, CheckCircle2, Play } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import type { Post, SocialAccount } from "@/types/database";
 import { VideoProgressBadge } from "@/components/video-progress-badge";
@@ -176,7 +176,7 @@ export default async function DashboardPage() {
                 Præsentér din bolig<br />med en professionel video
               </h2>
               <p className="mt-2 text-sm text-blue-200 leading-relaxed max-w-sm">
-                Indsæt dit Airbnb- eller Booking.com-link — AI'en genererer en flot præsentationsvideo på under 15 minutter, klar til at dele på sociale medier.
+                Indsæt dit Airbnb- eller Booking.com-link — AI&apos;en genererer en flot præsentationsvideo på under 15 minutter, klar til at dele på sociale medier.
               </p>
               <div className="mt-5 flex items-center gap-3">
                 <Link
