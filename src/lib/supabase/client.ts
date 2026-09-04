@@ -1,12 +1,11 @@
 import { createBrowserClient } from "@supabase/ssr";
+import { requirePublicSupabaseConfig } from "./config";
 
 /**
  * Supabase client for use in Client Components.
  * Reads the public env vars exposed at build time.
  */
 export function createClient() {
-  return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const config = requirePublicSupabaseConfig();
+  return createBrowserClient(config.url, config.anonKey);
 }
