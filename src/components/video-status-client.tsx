@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { useState, useEffect, useCallback, useTransition, useRef } from "react";
 import { CheckCircle2, Loader2, XCircle, Download, Share2, Send, Lock } from "lucide-react";
-import { pollVideoOrder } from "@/services/video-orders";
+import { pollVideoJob } from "@/services/video-jobs";
+import { JobProgress, type SceneView, type JobDiagnosticsView } from "@/components/video/job-progress";
+import { DEFAULT_VIDEO_STYLE, type VideoStyleId } from "@/lib/video-styles";
 import { shareVideoToSocial } from "@/services/share-video";
 import { createVideoPaymentCheckout } from "@/services/billing";
 import { VideoSalesText } from "@/components/video-sales-text";
@@ -58,15 +60,9 @@ type Props = {
   accounts: SocialAccount[];
   initialPaid: boolean;
   videoPrice: string;
+  videoStyle: VideoStyleId;
+  initialJobState: string;
 };
-
-const STEPS = [
-  "Analyserer billeder...",
-  "Opbygger scenesekvens...",
-  "Genererer video med AI...",
-  "Tilføjer kamerabevægelser...",
-  "Afsluttende touches...",
-];
 
 function SharePanel({ videoUrl, accounts, caption, setCaption }: { videoUrl: string; accounts: SocialAccount[]; caption: string; setCaption: (v: string) => void }) {
   const [open, setOpen] = useState(false);
@@ -197,32 +193,51 @@ function SharePanel({ videoUrl, accounts, caption, setCaption }: { videoUrl: str
   );
 }
 
-export function VideoStatusClient({ orderId, initialStatus, initialVideoUrl, initialVideoUrls, title, description, location, bookingUrl, imageUrls, accounts, initialPaid, videoPrice }: Props) {
+export function VideoStatusClient({ orderId, initialStatus, initialVideoUrl, initialVideoUrls, title, description, location, bookingUrl, imageUrls, accounts, initialPaid, videoPrice, videoStyle, initialJobState }: Props) {
   const paid = initialPaid;
   const [status, setStatus] = useState<Status>(initialStatus);
   const [videoUrl, setVideoUrl] = useState<string | undefined>(initialVideoUrl);
   const [videoUrls, setVideoUrls] = useState<string[]>(initialVideoUrls ?? (initialVideoUrl ? [initialVideoUrl] : []));
   const [caption, setCaption] = useState("");
-  const [stepIdx, setStepIdx] = useState(0);
-  const [elapsedSec, setElapsedSec] = useState(0);
-  // Set by the polling effect below before the ticker that reads it starts;
-  // initialising it with Date.now() here only re-ran a clock call per render.
-  const startRef = useRef<number>(0);
+  const [jobState, setJobState] = useState<string>(initialJobState);
+  const [jobLabel, setJobLabel] = useState("Klargør din video…");
+  const [jobProgress, setJobProgress] = useState(2);
+  const [jobError, setJobError] = useState<string | undefined>(undefined);
+  const [diagnostics, setDiagnostics] = useState<JobDiagnosticsView>({});
+  const [scenes, setScenes] = useState<SceneView[]>([]);
+  const [style, setStyle] = useState<VideoStyleId>(videoStyle ?? DEFAULT_VIDEO_STYLE);
+  const pollingRef = useRef(false);
 
+  // Each poll advances the pipeline by one step and reports where it got to,
+  // so the progress the customer sees is the job's real position.
   const poll = useCallback(async () => {
-    const result = await pollVideoOrder(orderId);
-    setStatus(result.status as Status);
-    if (result.videoUrl) setVideoUrl(result.videoUrl);
-    if (result.videoUrls?.length) setVideoUrls(result.videoUrls);
+    if (pollingRef.current) return;
+    pollingRef.current = true;
+    try {
+      const result = await pollVideoJob(orderId);
+      if ("error" in result) { setJobError(result.error); return; }
+      setStatus(result.status as Status);
+      setJobState(result.state);
+      setJobLabel(result.label);
+      setJobProgress(result.progress);
+      setJobError(result.error);
+      setDiagnostics(result.diagnostics as JobDiagnosticsView);
+      setScenes(result.scenes);
+      setStyle(result.videoStyle);
+      if (result.videoUrl) { setVideoUrl(result.videoUrl); setVideoUrls([result.videoUrl]); }
+    } finally {
+      pollingRef.current = false;
+    }
   }, [orderId]);
 
   useEffect(() => {
     if (status === "ready" || status === "failed") return;
-    startRef.current = Date.now();
-    const interval = setInterval(poll, 10_000);
-    const stepTimer = setInterval(() => setStepIdx((i) => (i + 1) % STEPS.length), 8_000);
-    const ticker = setInterval(() => setElapsedSec(Math.floor((Date.now() - startRef.current) / 1000)), 1_000);
-    return () => { clearInterval(interval); clearInterval(stepTimer); clearInterval(ticker); };
+    void poll();
+    // A step can take a while (WAN generation, then an ffmpeg render), so the
+    // interval paces the driver rather than racing it; `pollingRef` keeps two
+    // advances from overlapping.
+    const interval = setInterval(poll, 12_000);
+    return () => clearInterval(interval);
   }, [status, poll]);
 
   if (status === "ready" && videoUrl) {
@@ -328,57 +343,31 @@ export function VideoStatusClient({ orderId, initialStatus, initialVideoUrl, ini
     );
   }
 
-  // Cap visible progress at 92% until done.
-  const progressPct = Math.min(92, Math.round((elapsedSec / 1800) * 100));
-  const isDelayed = elapsedSec > 2400; // >40 min → show extra message
-
   return (
     <div className="space-y-6">
       {/* Once generation is well underway, let the user pay so it unlocks the moment it's ready. */}
-      {progressPct >= 80 && !paid && (
+      {jobProgress >= 80 && !paid && (
         <PaymentPanel orderId={orderId} videoPrice={videoPrice} nearlyReady />
       )}
 
-      <div className="rounded-2xl border border-blue-100 bg-blue-50 px-5 py-5">
-        <div className="flex items-center gap-3 mb-4">
-          <Loader2 size={20} className="text-blue-600 animate-spin shrink-0" />
-          <div>
-            <p className="font-semibold text-blue-900">AI genererer din video...</p>
-            <p className="text-sm text-blue-700">Leveres inden for 5-15 minutter</p>
-          </div>
-        </div>
-
-        {/* Step label */}
-        <p className="text-xs text-blue-600 min-h-[1rem] mb-2">{STEPS[stepIdx]}</p>
-
-        {/* Real progress bar */}
-        <div className="h-2 rounded-full bg-blue-200 overflow-hidden">
-          <div
-            className="h-full rounded-full bg-blue-500 transition-all duration-[3000ms] ease-linear"
-            style={{ width: `${progressPct}%` }}
-          />
-        </div>
-
-        <div className="mt-2 flex justify-between items-center">
-          <span className="text-xs text-blue-400">
-            {Math.floor(elapsedSec / 60)}:{String(elapsedSec % 60).padStart(2, "0")} forløbet
-          </span>
-          <span className="text-xs text-blue-400">{progressPct}%</span>
-        </div>
-
-        {isDelayed && (
-          <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
-            Dette tager lidt længere end normalt — AI&apos;en arbejder stadig. Du behøver ikke vente her; siden tjekker automatisk og vi sender dig besked, når videoen er klar.
-          </div>
-        )}
-      </div>
+      <JobProgress
+        orderId={orderId}
+        state={jobState}
+        label={jobLabel}
+        progress={jobProgress}
+        videoStyle={style}
+        diagnostics={diagnostics}
+        scenes={scenes}
+        error={jobError}
+        onImagesUploaded={poll}
+      />
 
       {imageUrls.length > 0 && (
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">Dine billeder ({imageUrls.length})</p>
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">Dine billeder ({imageUrls.length})</p>
           <div className="grid grid-cols-5 gap-2">
             {imageUrls.slice(0, 10).map((url, i) => (
-              <div key={i} className="aspect-video rounded-lg overflow-hidden border border-slate-200 bg-slate-100">
+              <div key={i} className="aspect-video overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
                 {url.startsWith("http") && <img src={url} alt="" className="h-full w-full object-cover" />}
               </div>
             ))}
@@ -386,7 +375,7 @@ export function VideoStatusClient({ orderId, initialStatus, initialVideoUrl, ini
         </div>
       )}
 
-      <p className="text-xs text-slate-400 text-center">Siden tjekker for opdateringer hvert 10. sekund</p>
+      <p className="text-center text-xs text-slate-400">Siden opdaterer sig selv, mens videoen laves</p>
     </div>
   );
 }

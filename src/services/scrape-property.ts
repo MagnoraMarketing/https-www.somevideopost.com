@@ -1,6 +1,7 @@
 "use server";
 
 import { existsSync } from "fs";
+import { assertPublicUrl, UnsafeUrlError } from "@/lib/safe-fetch";
 
 export type ScrapedProperty = {
   title?: string;
@@ -351,6 +352,15 @@ function hasUsefulData(data: ScrapedProperty): boolean {
 
 export async function scrapePropertyUrl(url: string): Promise<{ data?: ScrapedProperty; error?: string }> {
   if (!url || !url.startsWith("http")) return { error: "Ugyldig URL" };
+
+  // The URL comes from the customer and is fetched by the server, so it is
+  // validated (scheme, credentials, and every A/AAAA record) before any
+  // request goes out. All five callers of this action share the guard.
+  try {
+    await assertPublicUrl(url);
+  } catch (e) {
+    return { error: e instanceof UnsafeUrlError ? e.message : "Ugyldig URL" };
+  }
 
   if (isAirbnb(url)) {
     return {

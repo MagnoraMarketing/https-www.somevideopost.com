@@ -12,6 +12,8 @@ import {
 import Link from "next/link";
 import { scrapePropertyUrl, type ScrapedProperty } from "@/services/scrape-property";
 import { ScreenshotImporter } from "@/components/screenshot-importer";
+import { StyleSelector } from "@/components/video/style-selector";
+import { DEFAULT_VIDEO_STYLE, type VideoStyleId } from "@/lib/video-styles";
 
 const ROOM_LABELS = [
   "Stue", "Køkken", "Soveværelse", "Badeværelse", "Altan/Terrasse",
@@ -144,11 +146,15 @@ export function NewVideoForm() {
   // every searchParams change and overwrote whatever the user had typed.
   const [bookingUrl, setBookingUrl] = useState(() => searchParams.get("booking_url") ?? "");
   const [scraped, setScraped] = useState<ScrapedProperty | null>(null);
+  // The listing URL the pipeline re-reads server-side to find the actual
+  // property photographs — the preview above only shows what it found.
+  const [sourceUrl, setSourceUrl] = useState("");
 
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  const [videoStyle, setVideoStyle] = useState<VideoStyleId>(DEFAULT_VIDEO_STYLE);
   const [importUrl, setImportUrl] = useState("");
   const [importing, setImporting] = useState(false);
   const [importError, setImportError] = useState("");
@@ -162,6 +168,7 @@ export function NewVideoForm() {
     if (result.error) { setImportError(result.error); return; }
     if (result.data) {
       setScraped(result.data);
+      setSourceUrl(importUrl.trim());
       if (result.data.title && !title) setTitle(result.data.title);
       if (!bookingUrl) setBookingUrl(importUrl.trim());
       if (result.data.imageUrls.length > 0) {
@@ -349,9 +356,20 @@ export function NewVideoForm() {
                   </div>
                 </div>
 
-                {/* 2. Info */}
+                <input type="hidden" name="source_url" value={sourceUrl} />
+
+                {/* 2. Style */}
+                <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                  <h3 className="mb-1 text-base font-bold text-slate-900">2. Vælg videostil</h3>
+                  <p className="mb-4 text-sm text-slate-500">
+                    Stilen styrer stemning, kamera og tempo — boligen selv bliver altid vist præcis som på billederne.
+                  </p>
+                  <StyleSelector value={videoStyle} onChange={setVideoStyle} />
+                </div>
+
+                {/* 3. Info */}
                 <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-                  <h3 className="text-base font-bold text-slate-900">2. Oplysninger om din bolig</h3>
+                  <h3 className="text-base font-bold text-slate-900">3. Oplysninger om din bolig</h3>
                   <div>
                     <label className="mb-1.5 block text-sm font-medium text-slate-700">
                       Titel <span className="text-red-500">*</span>
@@ -384,10 +402,10 @@ export function NewVideoForm() {
                   </div>
                 </div>
 
-                {/* 3. Images */}
+                {/* 4. Images */}
                 <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
                   <div>
-                    <h3 className="text-base font-bold text-slate-900">3. Vælg billeder til video</h3>
+                    <h3 className="text-base font-bold text-slate-900">4. Vælg billeder til video</h3>
                     <p className="mt-1 text-sm text-slate-500">Rækkefølgen bestemmer fotoruten i videoen.</p>
                   </div>
                   {imageUrls.length > 0 ? (
@@ -406,9 +424,9 @@ export function NewVideoForm() {
                   <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFileChange} />
                 </div>
 
-                {/* 4. Submit */}
+                {/* 5. Submit */}
                 <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-                  <h3 className="text-base font-bold text-slate-900">4. Opret video</h3>
+                  <h3 className="text-base font-bold text-slate-900">5. Opret video</h3>
                   <button
                     type="submit"
                     disabled={!canSubmit}

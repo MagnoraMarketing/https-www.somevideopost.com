@@ -5,6 +5,7 @@ import { VideoStatusClient } from "@/components/video-status-client";
 import { getCurrency } from "@/lib/locale-server";
 import { formatPriceKey } from "@/lib/currency";
 import type { SocialAccount, VideoOrder } from "@/types/database";
+import { DEFAULT_VIDEO_STYLE, type VideoStyleId } from "@/lib/video-styles";
 
 export default async function VideoDetailPage({
   params,
@@ -53,6 +54,8 @@ export default async function VideoDetailPage({
           accounts={(accounts ?? []) as SocialAccount[]}
           initialPaid={(order as { paid?: boolean }).paid ?? false}
           videoPrice={formatPriceKey("video", currency)}
+          videoStyle={(order as { video_style?: VideoStyleId }).video_style ?? DEFAULT_VIDEO_STYLE}
+          initialJobState={(order as { job_state?: string }).job_state ?? "pending"}
         />
       </div>
     </>
