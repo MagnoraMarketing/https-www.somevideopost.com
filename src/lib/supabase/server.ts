@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { requirePublicSupabaseConfig } from "./config";
 
 /**
  * Supabase client for use in Server Components, Route Handlers, and
@@ -7,10 +8,14 @@ import { cookies } from "next/headers";
  */
 export async function createClient() {
   const cookieStore = await cookies();
+  // Names the missing variable rather than surfacing Supabase's generic
+  // "URL and Key are required" message, which says nothing about where to
+  // set them.
+  const config = requirePublicSupabaseConfig();
 
   return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    config.url,
+    config.anonKey,
     {
       cookies: {
         getAll() {
