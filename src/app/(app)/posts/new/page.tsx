@@ -435,7 +435,7 @@ export default function GeneratePostPage() {
                           selectedImage === src ? "border-blue-500 shadow-md" : "border-transparent hover:border-slate-300"
                         }`}
                       >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        { }
                         <img src={src} alt={`Billede ${i + 1}`} className="h-full w-full object-cover" />
                         {selectedImage === src && (
                           <div className="absolute inset-0 flex items-center justify-center bg-blue-600/20">
@@ -475,7 +475,7 @@ export default function GeneratePostPage() {
                   </div>
                   {selectedImage && (
                     <div className="mb-4 flex items-center gap-3 rounded-xl border border-blue-200 bg-blue-50 p-3">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      { }
                       <img src={selectedImage} alt="Valgt billede" className="h-16 w-16 rounded-lg object-cover" />
                       <div className="flex-1">
                         <p className="text-xs font-semibold text-blue-800">Opslagsbillede valgt</p>

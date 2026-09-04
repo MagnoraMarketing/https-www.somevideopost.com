@@ -55,7 +55,6 @@ export function ScreenshotImporter({ onImport }: Props) {
     }
     window.addEventListener("paste", onPaste);
     return () => window.removeEventListener("paste", onPaste);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
 
   async function processFile(file: File) {
@@ -133,7 +132,8 @@ export function ScreenshotImporter({ onImport }: Props) {
   function toggleSelect(i: number) {
     setSelected((prev) => {
       const next = new Set(prev);
-      next.has(i) ? next.delete(i) : next.add(i);
+      if (next.has(i)) next.delete(i);
+      else next.add(i);
       return next;
     });
   }

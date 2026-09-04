@@ -16,7 +16,14 @@ const ALL_LOCALES: Locale[] = ["da", "en", "es", "de"];
 // Bare (unprefixed) slugs whose default content is Danish, mirroring the
 // homepage's "/" convention. Non-Danish visitors get redirected to their
 // /en, /es or /de variant. "" represents the homepage itself.
-const DA_DEFAULT_SLUGS = new Set(["", "priser", "hvorfor-somevideopost"]);
+const DA_DEFAULT_SLUGS = new Set([
+  "",
+  "priser",
+  "hvorfor-somevideopost",
+  "privatlivspolitik",
+  "cookiepolitik",
+  "handelsbetingelser",
+]);
 
 function detectLocale(request: NextRequest): Locale {
   const cookieLocale = request.cookies.get("locale")?.value as Locale | undefined;
@@ -74,7 +81,8 @@ export async function proxy(request: NextRequest) {
 
   // Redirect non-Danish visitors away from bare Danish-default pages to
   // their localized variant — mirrors the original homepage-only behavior,
-  // now extended to priser and hvorfor-somevideopost. The auth pages
+  // now extended to priser, hvorfor-somevideopost and the three legal
+  // documents, all of which are authored Danish-first. The auth pages
   // (/login, /signup) and everything else deliberately stay OUT of this
   // set: prefixing /login would send it to /es/login, which redirects back
   // to /login (next.config) and loops infinitely (ERR_TOO_MANY_REDIRECTS).

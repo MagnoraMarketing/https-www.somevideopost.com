@@ -163,7 +163,10 @@ async function fetchViaPlaywright(url: string): Promise<{ data?: ScrapedProperty
     // On Vercel production, this path won't exist and fetchViaPlaywright returns {} gracefully.
     const devChromium = "/opt/pw-browsers/chromium-1194/chrome-linux/chrome";
     const executablePath = process.env.PLAYWRIGHT_CHROMIUM_PATH ?? devChromium;
-    if (!existsSync(executablePath)) return {};
+    // The path is resolved at runtime and the binary is never bundled, so keep
+    // it out of the trace — otherwise Turbopack falls back to tracing the whole
+    // project into every route that reaches this module.
+    if (!existsSync(/* turbopackIgnore: true */ executablePath)) return {};
     const browser = await chromium.launch({
       executablePath,
       headless: true,

@@ -163,6 +163,10 @@ export function CinematicWalkthrough({ locale = "da" }: { locale?: Locale }) {
   useEffect(() => { scenesRef.current = scenes; }, [scenes]);
   useEffect(() => { playingRef.current = playing; }, [playing]);
   useEffect(() => { modeRef.current = mode; }, [mode]);
+  // The loader effect below runs once on mount but needs the *current* locale
+  // for its fallback title; a dep would re-run the whole fetch on every switch.
+  const localeRef = useRef(locale);
+  useEffect(() => { localeRef.current = locale; }, [locale]);
 
   // ── Load the default (bundled) tour, then try to upgrade to listing photos ──
   useEffect(() => {
@@ -185,7 +189,7 @@ export function CinematicWalkthrough({ locale = "da" }: { locale?: Locale }) {
         if (cancelled || loaded.length < 3) return;
         setScenes(loaded);
         setReady(true);
-        setTitle((data.title ? data.title.slice(0, 60) : null) ?? DEMO_TITLE_OVERRIDE[locale] ?? DEMO_TITLE_OVERRIDE.da);
+        setTitle((data.title ? data.title.slice(0, 60) : null) ?? DEMO_TITLE_OVERRIDE[localeRef.current] ?? DEMO_TITLE_OVERRIDE.da);
         setMeta({ price: data.price, guests: data.guests, beds: data.beds, baths: data.baths, rating: data.rating, reviews: data.reviews });
         tRef.current = Math.min(tRef.current, totalDuration(loaded.length) - 0.01);
         roomRef.current = Math.min(roomRef.current, loaded.length - 1);

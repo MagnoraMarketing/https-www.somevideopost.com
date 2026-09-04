@@ -1,11 +1,16 @@
 import Link from "next/link";
 import { BrandWordmark } from "@/components/layout/brand-wordmark";
 import { CHROME, LANDING, type Locale } from "@/lib/i18n";
+import { legalHref } from "@/lib/legal";
+import { CookieSettingsButton } from "@/components/consent/cookie-consent";
 
 const ORANGE_GRADIENT = "linear-gradient(135deg, #FFB36B 0%, #FF6B4A 100%)";
 
 function FacebookIcon({ size = 15 }: { size?: number }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" /></svg>;
+}
+function TikTokIcon({ size = 14 }: { size?: number }) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.17 8.17 0 0 0 4.78 1.52V6.76a4.85 4.85 0 0 1-1.01-.07z" /></svg>;
 }
 function InstagramIcon({ size = 15 }: { size?: number }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" /></svg>;
@@ -33,12 +38,15 @@ export function SiteFooter({ locale = "da" }: { locale?: Locale }) {
               <a href="https://www.facebook.com/profile.php?id=61592058891174" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-slate-400 transition-colors hover:border-blue-400/40 hover:text-blue-300">
                 <FacebookIcon />
               </a>
-              <a href="#" aria-label="Instagram" className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-slate-400 transition-colors hover:border-blue-400/40 hover:text-blue-300">
+              {/* No Instagram or TikTok profile exists yet. Rendered as inert
+                  marks rather than <a href="#">, which looked like a link and
+                  went nowhere. Give each a real URL to turn it back into one. */}
+              <span aria-hidden className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-slate-700">
                 <InstagramIcon />
-              </a>
-              <a href="#" aria-label="TikTok" className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-slate-400 transition-colors hover:border-blue-400/40 hover:text-blue-300">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.17 8.17 0 0 0 4.78 1.52V6.76a4.85 4.85 0 0 1-1.01-.07z" /></svg>
-              </a>
+              </span>
+              <span aria-hidden className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-slate-700">
+                <TikTokIcon />
+              </span>
             </div>
           </div>
           <div>
@@ -87,10 +95,11 @@ export function SiteFooter({ locale = "da" }: { locale?: Locale }) {
         </div>
         <div className="mt-12 flex flex-col items-center gap-4 border-t border-white/5 pt-8 md:flex-row md:justify-between">
           <p className="text-xs text-slate-600">{t.footerCopyright}</p>
-          <div className="flex gap-6 text-xs text-slate-600">
-            <a href="#" className="transition-colors hover:text-slate-400">{t.footerPrivacy}</a>
-            <a href="#" className="transition-colors hover:text-slate-400">{t.footerCookies}</a>
-            <a href="#" className="transition-colors hover:text-slate-400">{t.footerTerms}</a>
+          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-slate-600">
+            <Link href={legalHref(locale, "privatlivspolitik")} className="transition-colors hover:text-slate-400">{t.footerPrivacy}</Link>
+            <Link href={legalHref(locale, "cookiepolitik")} className="transition-colors hover:text-slate-400">{t.footerCookies}</Link>
+            <Link href={legalHref(locale, "handelsbetingelser")} className="transition-colors hover:text-slate-400">{t.footerTerms}</Link>
+            <CookieSettingsButton locale={locale} />
           </div>
         </div>
       </div>

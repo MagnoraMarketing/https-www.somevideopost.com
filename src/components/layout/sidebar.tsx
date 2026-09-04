@@ -20,26 +20,9 @@ const PLATFORM_COLORS: Record<string, string> = {
   linkedin: "#0A66C2",
 };
 
-const PLATFORM_BG: Record<string, string> = {
-  facebook: "#E7F0FD",
-  instagram: "#FCE4EC",
-  tiktok: "#E8E8E8",
-  snapchat: "#FFFDE7",
-  youtube: "#FFEBEE",
-  linkedin: "#E3F2FD",
-};
-
 const SUGGESTED_PLATFORMS = [
   { label: "YouTube", icon: Video, color: "#FF0000", bg: "#FFEBEE" },
   { label: "Mere kanaler", icon: Plus, color: "#64748b", bg: "#F1F5F9" },
-];
-
-const PRIMARY_NAV = [
-  { href: "/dashboard", icon: Home, label: "Hjem" },
-  { href: "/posts/new", icon: Plus, label: "Opret" },
-  { href: "/posts", icon: CalendarDays, label: "Planlæg" },
-  { href: "/videos", icon: Video, label: "Videoer" },
-  { href: "/properties", icon: Building2, label: "Boliger" },
 ];
 
 type Locale = I18nLocale;
@@ -353,11 +336,17 @@ function BottomTabBar() {
 export function Sidebar({ accounts = [], userEmail, locale = "da" }: SidebarProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const pathname = usePathname();
+  const [drawerPathname, setDrawerPathname] = useState(pathname);
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
 
-  // Close drawer on route change
-  useEffect(() => { setDrawerOpen(false); }, [pathname]);
+  // Close the drawer on route change. Adjusting during render rather than in an
+  // effect: React re-runs this component immediately with the new state before
+  // touching the DOM, so the drawer never paints open on the new route.
+  if (pathname !== drawerPathname) {
+    setDrawerPathname(pathname);
+    setDrawerOpen(false);
+  }
 
   // Prevent body scroll when drawer is open
   useEffect(() => {

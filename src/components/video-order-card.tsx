@@ -99,7 +99,7 @@ function ProgressSection({
           {status === "failed" ? "Video generering fejlede." : `Genereringen tager for lang tid (${mins} min).`}
         </p>
         <p className="mt-1 text-xs text-red-700">
-          Klik på "Genstart" for at starte en ny generering med Google AI.
+          Klik på &ldquo;Genstart&rdquo; for at starte en ny generering med Google AI.
         </p>
         <div className="mt-3 flex gap-2">
           <button

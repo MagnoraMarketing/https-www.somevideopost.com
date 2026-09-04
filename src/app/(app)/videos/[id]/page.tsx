@@ -4,7 +4,7 @@ import { Topbar } from "@/components/layout/topbar";
 import { VideoStatusClient } from "@/components/video-status-client";
 import { getCurrency } from "@/lib/locale-server";
 import { formatPriceKey } from "@/lib/currency";
-import type { SocialAccount } from "@/types/database";
+import type { SocialAccount, VideoOrder } from "@/types/database";
 
 export default async function VideoDetailPage({
   params,
@@ -44,7 +44,7 @@ export default async function VideoDetailPage({
           orderId={id}
           initialStatus={order.status}
           initialVideoUrl={order.video_url ?? undefined}
-          initialVideoUrls={(order as any).video_urls ?? undefined}
+          initialVideoUrls={(order as VideoOrder).video_urls ?? undefined}
           title={order.title ?? ""}
           description={property?.description ?? null}
           location={property?.location ?? null}

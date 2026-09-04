@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Topbar } from "@/components/layout/topbar";
 import { ChannelSettingsClient } from "@/components/accounts/channel-settings-client";
-import type { SocialAccount } from "@/types/database";
 
 const PLATFORM_LABELS: Record<string, string> = {
   facebook: "Facebook Page",

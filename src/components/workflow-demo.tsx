@@ -50,14 +50,22 @@ export function WorkflowDemo({ t }: WorkflowDemoProps) {
   const [visiblePhotos, setVisiblePhotos] = useState(0);
   const [videoPhotoIdx, setVideoPhotoIdx] = useState(0);
   const videoInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [renderedStep, setRenderedStep] = useState(step);
 
-  useEffect(() => {
+  // Every step restarts the animation from scratch. Clearing the derived state
+  // during render rather than in the effect below means the new step's first
+  // paint already shows an empty stage, instead of briefly re-showing the
+  // previous step's text and photos before the effect runs.
+  if (step !== renderedStep) {
+    setRenderedStep(step);
     setTypedUrl("");
     setTypedText("");
     setSharedPlatforms([]);
     setVisiblePhotos(0);
     setVideoPhotoIdx(0);
+  }
 
+  useEffect(() => {
     if (step === 0) {
       let i = 0;
       const iv = setInterval(() => {

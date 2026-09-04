@@ -3,6 +3,9 @@ import { Geist, Fraunces } from "next/font/google";
 import { cookies } from "next/headers";
 import "./globals.css";
 import { GoogleAnalytics } from "@/components/analytics/google-analytics";
+import { CookieConsent } from "@/components/consent/cookie-consent";
+import { CONSENT_COOKIE, isConsentChoice, type ConsentChoice } from "@/lib/consent";
+import { coerceLocale, type Locale } from "@/lib/i18n";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -72,8 +75,13 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const cookieStore = await cookies();
-  const rawLocale = cookieStore.get("locale")?.value;
-  const locale = (["da","en","es","de"].includes(rawLocale ?? "") ? rawLocale : "da") as string;
+  const locale: Locale = coerceLocale(cookieStore.get("locale")?.value);
+
+  // Read the consent choice server-side so the banner and the analytics gate
+  // both render correctly on first paint — no flash of a banner the visitor
+  // already dismissed, and no analytics before an actual "yes".
+  const rawConsent = cookieStore.get(CONSENT_COOKIE)?.value;
+  const consent: ConsentChoice | null = isConsentChoice(rawConsent) ? rawConsent : null;
 
   return (
     <html
@@ -82,7 +90,8 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-white">
         {children}
-        <GoogleAnalytics />
+        <CookieConsent locale={locale} initialChoice={consent} />
+        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} initialChoice={consent} />
       </body>
     </html>
   );
