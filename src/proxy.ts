@@ -47,6 +47,16 @@ function setLocaleCookie(res: NextResponse, locale: Locale) {
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Supabase appends its one-time confirmation code to the project's Site URL,
+  // which points at the site root. Forward those to the callback route so a
+  // link that was already emailed still completes, rather than landing on the
+  // front page where nothing exchanges it for a session.
+  if (pathname === "/" && request.nextUrl.searchParams.has("code")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/auth/callback";
+    return NextResponse.redirect(url);
+  }
+
   // Explicit language choice via ?lang=xx from the language switcher. Every
   // page's *default* locale is unprefixed (Danish for most pages, English
   // for the AI-video pillar pages), so a stale `locale` cookie would

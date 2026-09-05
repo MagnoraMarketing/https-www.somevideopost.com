@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { coerceLocale, type Locale } from "@/lib/i18n";
 import { coerceCurrency, currencyForLocale, isCurrency, type Currency } from "@/lib/currency";
@@ -31,6 +31,23 @@ function authErrorMessage(error: { message?: string; status?: number }): string 
     return "Kontoen kunne ikke oprettes på grund af en serverfejl. Prøv igen om lidt — hvis det bliver ved, er der en fejl i databasen (fejl " + error.status + ").";
   }
   return "Kontoen kunne ikke oprettes. Kontrollér din email og adgangskode, og prøv igen.";
+}
+
+/**
+ * Absolute URL for the confirmation link Supabase emails out.
+ *
+ * Derived from the request rather than a fixed env var, so a signup on a
+ * preview deployment confirms back to that same deployment instead of bouncing
+ * the user to production.
+ */
+async function emailRedirectUrl(): Promise<string> {
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host");
+  const proto = h.get("x-forwarded-proto") ?? (host?.startsWith("localhost") ? "http" : "https");
+  const base = host
+    ? `${proto}://${host}`
+    : process.env.NEXT_PUBLIC_APP_URL ?? process.env.APP_URL ?? "https://www.somevideopost.com";
+  return `${base}/auth/callback`;
 }
 
 export async function signUpAction(
@@ -65,6 +82,10 @@ export async function signUpAction(
     email,
     password,
     options: {
+      // Without this the confirmation link follows the project's Site URL,
+      // which on a fresh Supabase project is http://localhost:3000 — a dead
+      // link for every real user.
+      emailRedirectTo: await emailRedirectUrl(),
       data: {
         locale,
         currency,
