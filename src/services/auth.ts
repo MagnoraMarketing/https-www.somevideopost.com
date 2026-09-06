@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { cookies, headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { missingPublicSupabaseVars } from "@/lib/supabase/config";
 import { coerceLocale, type Locale } from "@/lib/i18n";
 import { coerceCurrency, currencyForLocale, isCurrency, type Currency } from "@/lib/currency";
 import type { AuthFormState } from "@/types/auth";
@@ -69,6 +70,35 @@ async function emailRedirectUrl(): Promise<string> {
   return `${base}/auth/callback`;
 }
 
+/**
+ * The Supabase client, or a message the form can render.
+ *
+ * On a deployment whose environment variables are not set — a preview branch
+ * that never got them, most often — `createClient()` throws, and a throw
+ * inside a Server Action reaches the user as Next's blank "A server error
+ * occurred" page. There is nothing they can do with that. Naming the missing
+ * variable at least tells whoever is testing what to go and set.
+ */
+async function clientOrConfigError(): Promise<
+  { supabase: Awaited<ReturnType<typeof createClient>>; error?: undefined } | { supabase?: undefined; error: string }
+> {
+  const missing = missingPublicSupabaseVars();
+  if (missing.length) {
+    console.error(`[auth] Supabase is not configured: ${missing.join(", ")} missing`);
+    return {
+      error:
+        `Log ind er ikke sat op på dette miljø: ${missing.join(" og ")} mangler. ` +
+        "Tilføj variablerne i Vercel (Settings → Environment Variables) for netop dette miljø, og deploy igen.",
+    };
+  }
+  try {
+    return { supabase: await createClient() };
+  } catch (e) {
+    console.error("[auth] Supabase client unavailable:", e instanceof Error ? e.message : String(e));
+    return { error: "Login-tjenesten er ikke tilgængelig lige nu. Prøv igen om lidt." };
+  }
+}
+
 export async function signUpAction(
   _prevState: AuthFormState,
   formData: FormData
@@ -93,10 +123,12 @@ export async function signUpAction(
     .slice(0, 10);
 
   if (!email || !password) {
-    return { error: "Email and password are required." };
+    return { error: "Email og adgangskode skal udfyldes." };
   }
 
-  const supabase = await createClient();
+  const { supabase, error: configError } = await clientOrConfigError();
+  if (!supabase) return { error: configError };
+
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -158,17 +190,25 @@ export async function signInAction(
   const password = String(formData.get("password") ?? "");
 
   if (!email || !password) {
-    return { error: "Email and password are required." };
+    return { error: "Email og adgangskode skal udfyldes." };
   }
 
-  const supabase = await createClient();
+  const { supabase, error: configError } = await clientOrConfigError();
+  if (!supabase) return { error: configError };
+
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
 
   if (error) {
-    return { error: "Incorrect email or password." };
+    // "Email not confirmed" is not a wrong password, and telling the user it
+    // is sends them off resetting a password that works.
+    if (/confirm/i.test(error.message) || error.code === "email_not_confirmed") {
+      return { error: "Din email er ikke bekræftet endnu. Åbn bekræftelseslinket i mailen, og log derefter ind." };
+    }
+    console.error("[auth] sign-in failed:", { status: error.status, code: error.code, message: error.message });
+    return { error: "Forkert email eller adgangskode." };
   }
 
   // Re-apply the account's saved language & currency for this session.
@@ -181,7 +221,9 @@ export async function signInAction(
 }
 
 export async function signOutAction(): Promise<void> {
-  const supabase = await createClient();
-  await supabase.auth.signOut();
+  const { supabase } = await clientOrConfigError();
+  // Signing out of a deployment that cannot reach Supabase still has to land
+  // the user on the login page rather than on an error screen.
+  if (supabase) await supabase.auth.signOut();
   redirect("/login");
 }
