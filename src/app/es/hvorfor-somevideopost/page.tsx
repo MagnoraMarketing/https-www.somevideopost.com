@@ -66,7 +66,7 @@ const FAQ = [
   },
   {
     q: "¿Cuánto cuesta?",
-    a: "El acceso al estudio cuesta 10 €/mes y te da 15 publicaciones IA al mes además de publicación directa en redes sociales. Los vídeos de presentación se pagan aparte, por vídeo — 50 € cada uno — así que solo pagas por los vídeos que realmente haces. Sin compromiso. Consulta todos los detalles en la página de precios.",
+    a: "El acceso al estudio cuesta 10 €/mes y te da 15 publicaciones IA al mes además de publicación directa en redes sociales. Los vídeos de presentación se pagan aparte, por vídeo — 14 € cada uno — así que solo pagas por los vídeos que realmente haces. Sin compromiso. Consulta todos los detalles en la página de precios.",
   },
 ];
 
@@ -427,7 +427,7 @@ export default function WhySomeVideoPostEsPage() {
         <div className="relative mx-auto max-w-3xl px-6 text-center">
           <h2 className="text-3xl font-bold md:text-4xl">¿Listo para comercializar tu propiedad en piloto automático?</h2>
           <p className="mx-auto mt-4 max-w-lg text-slate-300">
-            Pasa de un enlace de propiedad a un vídeo y publicación terminados en minutos. Acceso al estudio desde 10 €/mes, vídeos desde 50 € cada uno.
+            Pasa de un enlace de propiedad a un vídeo y publicación terminados en minutos. Acceso al estudio desde 10 €/mes, vídeos desde 14 € cada uno.
           </p>
           <Link href="/signup" className="mt-8 inline-flex items-center gap-2 rounded-xl px-8 py-4 text-base font-bold text-white shadow-[0_0_35px_rgba(255,107,74,0.4)] transition-opacity hover:opacity-90" style={{ background: ORANGE_GRADIENT }}>
             Empieza hoy <ArrowRight size={18} />

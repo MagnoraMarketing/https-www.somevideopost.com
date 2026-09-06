@@ -11,6 +11,7 @@ import { Topbar } from "@/components/layout/topbar";
 import { scrapePropertyUrl, type ScrapedProperty } from "@/services/scrape-property";
 import { getSocialAccounts } from "@/services/social-accounts";
 import { createPostAction } from "@/services/posts";
+import { PriceRows } from "@/components/pricing/price-rows";
 
 // ── Brand icons ───────────────────────────────────────────────────────────────
 
@@ -253,18 +254,13 @@ export default function GeneratePostPage() {
 
               <div className="rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
                 <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Priser</p>
-                <div className="space-y-2">
-                  {[
-                    { label: "Abonnement", price: "€10 / md" },
-                    { label: "Pr. opslag", price: "5 kr." },
-                    { label: "Præsentationsvideo", price: "€50" },
-                  ].map((row) => (
-                    <div key={row.label} className="flex items-center justify-between text-sm">
-                      <span className="text-slate-600">{row.label}</span>
-                      <span className="font-semibold text-slate-900">{row.price}</span>
-                    </div>
-                  ))}
-                </div>
+                <PriceRows
+                  rows={[
+                    { label: "Abonnement", price: "subscription", suffix: "/ md." },
+                    { label: "Pr. opslag", price: "aiPost", decimals: true },
+                    { label: "Præsentationsvideo", price: "video" },
+                  ]}
+                />
                 <p className="mt-2 text-[11px] text-slate-400">Abonnementet giver din månedlige opslag-saldo. Opsig når som helst.</p>
                 <Link href="/billing" className="mt-3 flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:underline">
                   <ShoppingCart size={11} /> Se abonnement & saldo

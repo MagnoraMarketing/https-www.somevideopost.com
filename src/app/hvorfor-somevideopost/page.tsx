@@ -65,7 +65,7 @@ const FAQ = [
   },
   {
     q: "Hvad koster det?",
-    a: "Studie-adgang koster €10/md. og giver dig 15 AI-opslag om måneden samt direkte deling til sociale medier. Præsentationsvideoer betales separat pr. styk — €50 pr. video — så du kun betaler for de videoer, du faktisk laver. Ingen binding. Se alle detaljer på prissiden.",
+    a: "Studie-adgang koster €10/md. og giver dig 15 AI-opslag om måneden samt direkte deling til sociale medier. Præsentationsvideoer betales separat pr. styk — 99 kr. pr. video — så du kun betaler for de videoer, du faktisk laver. Ingen binding. Se alle detaljer på prissiden.",
   },
 ];
 
@@ -428,7 +428,7 @@ export default function WhySomeVideoPostPage() {
         <div className="relative mx-auto max-w-3xl px-6 text-center">
           <h2 className="text-3xl font-bold md:text-4xl">Klar til at markedsføre din bolig på autopilot?</h2>
           <p className="mx-auto mt-4 max-w-lg text-slate-300">
-            Gå fra boliglink til færdig video og opslag på minutter. Pakker fra €50/md. med præsentationsvideoer inkluderet.
+            Gå fra boliglink til færdig video og opslag på minutter. Studie-adgang fra 75 kr./md., videoer fra 99 kr. pr. stk.
           </p>
           <Link href="/signup" className="mt-8 inline-flex items-center gap-2 rounded-xl px-8 py-4 text-base font-bold text-white shadow-[0_0_35px_rgba(255,107,74,0.4)] transition-opacity hover:opacity-90" style={{ background: ORANGE_GRADIENT }}>
             Kom i gang i dag <ArrowRight size={18} />

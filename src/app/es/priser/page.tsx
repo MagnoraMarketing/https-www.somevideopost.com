@@ -11,7 +11,7 @@ const BASE = "https://www.somevideopost.com";
 export const metadata: Metadata = {
   title: "Precios — SOME VIDEO POST | Vídeo IA y redes sociales para anfitriones",
   description:
-    "Precios simples para somevideopost.com: 10 €/mes por acceso al estudio con publicaciones IA y publicación directa en redes sociales, y 50 € por vídeo de presentación — paga solo por los vídeos que uses. Sin compromiso.",
+    "Precios simples para somevideopost.com: 10 €/mes por acceso al estudio con publicaciones IA y publicación directa en redes sociales, y 14 € por vídeo de presentación — paga solo por los vídeos que uses. Sin compromiso.",
   keywords:
     "precios somevideopost, precio vídeo IA, marketing redes sociales alquiler, precio marketing alquiler vacacional, precio vídeo de presentación",
   alternates: {
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Precios — SOME VIDEO POST",
     description:
-      "10 €/mes por acceso al estudio con publicaciones IA y publicación directa, y 50 € por vídeo de presentación. Paga solo por lo que uses. Sin compromiso.",
+      "10 €/mes por acceso al estudio con publicaciones IA y publicación directa, y 14 € por vídeo de presentación. Paga solo por lo que uses. Sin compromiso.",
     type: "website",
     siteName: "somevideopost.com",
     locale: "es_ES",

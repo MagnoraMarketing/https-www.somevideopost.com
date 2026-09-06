@@ -11,7 +11,7 @@ const BASE = "https://www.somevideopost.com";
 export const metadata: Metadata = {
   title: "Preise — SOME VIDEO POST | KI-Video & Social Media für Gastgeber",
   description:
-    "Einfache Preise für somevideopost.com: 10 €/Monat für Studio-Zugang mit KI-Beiträgen und direktem Teilen in sozialen Medien, und 50 € pro Präsentationsvideo — zahle nur für die Videos, die du nutzt. Keine Bindung.",
+    "Einfache Preise für somevideopost.com: 10 €/Monat für Studio-Zugang mit KI-Beiträgen und direktem Teilen in sozialen Medien, und 14 € pro Präsentationsvideo — zahle nur für die Videos, die du nutzt. Keine Bindung.",
   keywords:
     "somevideopost Preise, KI-Video Preis, Social Media Vermietung Marketing, Ferienvermietung Marketing Preis, Präsentationsvideo Preis",
   alternates: {
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Preise — SOME VIDEO POST",
     description:
-      "10 €/Monat für Studio-Zugang mit KI-Beiträgen und direktem Teilen, und 50 € pro Präsentationsvideo. Zahle nur für das, was du nutzt. Keine Bindung.",
+      "10 €/Monat für Studio-Zugang mit KI-Beiträgen und direktem Teilen, und 14 € pro Präsentationsvideo. Zahle nur für das, was du nutzt. Keine Bindung.",
     type: "website",
     siteName: "somevideopost.com",
     locale: "de_DE",

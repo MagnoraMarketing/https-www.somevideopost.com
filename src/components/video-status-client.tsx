@@ -246,7 +246,7 @@ export function VideoStatusClient({ orderId, initialStatus, initialVideoUrl, ini
   if (status === "ready" && videoUrl) {
     const clips = videoUrls.length > 0 ? videoUrls : [videoUrl];
 
-    // ── Locked: video generated, waiting for the €50 payment ──
+    // ── Locked: video generated, waiting for the per-video payment ──
     if (!paid) {
       return (
         <div className="space-y-5">
