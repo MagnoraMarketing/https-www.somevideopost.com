@@ -12,6 +12,8 @@ import { scrapePropertyUrl, type ScrapedProperty } from "@/services/scrape-prope
 import { getSocialAccounts } from "@/services/social-accounts";
 import { createPostAction } from "@/services/posts";
 import { PriceRows } from "@/components/pricing/price-rows";
+import { useCurrency } from "@/components/pricing/currency-context";
+import { formatPriceKey } from "@/lib/currency";
 
 // ── Brand icons ───────────────────────────────────────────────────────────────
 
@@ -85,6 +87,12 @@ async function readGenerateResponse(res: Response): Promise<GenerateResponse> {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function GeneratePostPage() {
+  // Prices come from the shared table in the account's own currency, so the
+  // copy can never quote an amount the checkout does not charge.
+  const currency = useCurrency();
+  const postPrice = formatPriceKey("aiPost", currency, { decimals: true });
+  const subscriptionPrice = formatPriceKey("subscription", currency);
+
   // URL + scrape
   const [url, setUrl] = useState("");
   const [scraping, setScraping] = useState(false);
@@ -214,7 +222,7 @@ export default function GeneratePostPage() {
       {/* Info banner */}
       <div className="border-b border-orange-100 bg-orange-50 px-4 py-2.5 md:px-8 md:py-3">
         <p className="text-sm text-orange-800">
-          <span className="font-semibold">5 kr. pr. opslag</span> — trækkes fra din månedlige saldo (abonnement €10/md).
+          <span className="font-semibold">{postPrice} pr. opslag</span> — trækkes fra din månedlige saldo (abonnement {subscriptionPrice}/md.).
         </p>
       </div>
 
@@ -321,7 +329,7 @@ export default function GeneratePostPage() {
                 {noCredits && (
                   <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
                     <p className="text-sm font-semibold text-amber-800">Ingen saldo tilbage</p>
-                    <p className="mt-0.5 text-xs text-amber-700">Tegn abonnementet (€10/md) for at få din månedlige opslag-saldo.</p>
+                    <p className="mt-0.5 text-xs text-amber-700">Tegn abonnementet ({subscriptionPrice}/md.) for at få din månedlige opslag-saldo.</p>
                     <Link href="/billing" className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-amber-700 underline">
                       <ShoppingCart size={11} /> Tegn abonnement
                     </Link>

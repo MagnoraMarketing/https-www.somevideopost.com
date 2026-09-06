@@ -65,7 +65,7 @@ const FAQ = [
   },
   {
     q: "Hvad koster det?",
-    a: "Studie-adgang koster €10/md. og giver dig 15 AI-opslag om måneden samt direkte deling til sociale medier. Præsentationsvideoer betales separat pr. styk — 99 kr. pr. video — så du kun betaler for de videoer, du faktisk laver. Ingen binding. Se alle detaljer på prissiden.",
+    a: "Studie-adgang koster 75 kr./md. og giver dig 15 AI-opslag om måneden samt direkte deling til sociale medier. Præsentationsvideoer betales separat pr. styk — 99 kr. pr. video — så du kun betaler for de videoer, du faktisk laver. Ingen binding. Se alle detaljer på prissiden.",
   },
 ];
 
