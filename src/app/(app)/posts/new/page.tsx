@@ -58,11 +58,13 @@ const PLATFORMS = [
   { id: "linkedin" as const, label: "LinkedIn", desc: "Professionel, investorfokus", color: "#0A66C2", icon: <IconLinkedin /> },
 ];
 
-const BENEFITS = [
+// The last line quotes a price, so it is built from the shared table rather
+// than written out — the same reason the boxes below take their amounts there.
+const benefitsFor = (postPrice: string) => [
   "AI-genereret tekst tilpasset platformen",
   "Henter billeder direkte fra annoncen",
   "Henter titel, pris, størrelse og beliggenhed",
-  "5 kr. pr. opslag fra din månedlige saldo",
+  `${postPrice} pr. opslag fra din månedlige saldo`,
 ];
 
 type Account = Awaited<ReturnType<typeof getSocialAccounts>>[number];
@@ -251,7 +253,7 @@ export default function GeneratePostPage() {
                   <span className="ml-2 text-xs text-blue-200">Brugt af mæglere</span>
                 </div>
                 <ul className="space-y-2.5">
-                  {BENEFITS.map((b) => (
+                  {benefitsFor(postPrice).map((b) => (
                     <li key={b} className="flex items-start gap-2 text-sm text-blue-100">
                       <CheckCircle2 size={14} className="mt-0.5 shrink-0 text-emerald-400" />
                       {b}
