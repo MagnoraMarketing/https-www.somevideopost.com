@@ -31,7 +31,11 @@ export type ExtractionMethod =
   | "source-srcset"
   | "css-background"
   | "script-url"
-  | "upload";
+  | "upload"
+  /** A URL the customer already picked in the order form. */
+  | "chosen"
+  /** Found by the multi-strategy scraper after a direct read was blocked. */
+  | "scraper-fallback";
 
 /** Path/filename fragments that never belong to a property photograph. */
 const JUNK_PATTERNS = [
@@ -152,6 +156,9 @@ function scoreCandidate(c: Omit<ImageCandidate, "score">): number {
     "og:image": 26, "json-ld": 24, "embedded-json": 22, "img-srcset": 20,
     "source-srcset": 18, "img-src": 16, "img-lazy": 16, meta: 12,
     "script-url": 8, "css-background": 6, upload: 30,
+    // Already chosen by the customer, or found by the scraper after a direct
+    // read was blocked — both outrank anything guessed from the markup.
+    chosen: 30, "scraper-fallback": 24,
   }[c.method];
 
   if (/gallery|slide|photo|image|billede|media|foto/i.test(c.url)) score += 8;

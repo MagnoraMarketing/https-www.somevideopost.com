@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Sparkles, Loader2, Copy, Check, RefreshCw, Wand2 } from "lucide-react";
+import { saveVideoCaption } from "@/services/video-jobs";
 
 type Platform = "facebook" | "instagram" | "tiktok" | "linkedin";
 
@@ -13,21 +14,31 @@ const PLATFORMS: { key: Platform; label: string }[] = [
 ];
 
 export function VideoSalesText({
+  orderId,
   title,
   description,
   location,
   bookingUrl,
   caption,
   setCaption,
+  initialPlatform,
+  hasStoredCaption = false,
 }: {
+  /** The order the text belongs to — everything generated is stored on it. */
+  orderId: string;
   title?: string;
   description?: string | null;
   location?: string | null;
   bookingUrl?: string | null;
   caption: string;
   setCaption: (v: string) => void;
+  initialPlatform?: string;
+  /** True when the caption above came from the database, not from this session. */
+  hasStoredCaption?: boolean;
 }) {
-  const [platform, setPlatform] = useState<Platform>("facebook");
+  const [platform, setPlatform] = useState<Platform>(
+    PLATFORMS.some((p) => p.key === initialPlatform) ? (initialPlatform as Platform) : "facebook",
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
@@ -52,20 +63,25 @@ export function VideoSalesText({
       });
       const data = await res.json();
       if (!res.ok || !data.text) throw new Error(data.error ?? "Kunne ikke generere tekst");
-      setCaption(data.text as string);
+      const text = data.text as string;
+      setCaption(text);
+      // Persist immediately: a text nobody stored is a text the next visit
+      // silently replaces.
+      void saveVideoCaption(orderId, text, platform);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Noget gik galt");
     } finally {
       setLoading(false);
     }
-  }, [platform, title, description, location, bookingUrl, setCaption]);
+  }, [orderId, platform, title, description, location, bookingUrl, setCaption]);
 
-  // Auto-generate a first suggestion once, when there's nothing yet.
+  // Auto-generate a first suggestion once, when there's nothing yet. A caption
+  // already stored on the order is never overwritten by a fresh generation.
   useEffect(() => {
-    if (autoRanRef.current || caption.trim()) return;
+    if (autoRanRef.current || caption.trim() || hasStoredCaption) return;
     autoRanRef.current = true;
     generate();
-  }, [caption, generate]);
+  }, [caption, hasStoredCaption, generate]);
 
   async function copy() {
     try {
@@ -115,6 +131,9 @@ export function VideoSalesText({
           <textarea
             value={caption}
             onChange={(e) => setCaption(e.target.value)}
+            // Edits are stored when the field loses focus — no keystroke-level
+            // traffic, but nothing typed here is lost on a reload either.
+            onBlur={() => { if (caption.trim()) void saveVideoCaption(orderId, caption, platform); }}
             rows={7}
             placeholder={loading ? "AI skriver din salgstekst…" : "Din salgstekst vises her — du kan rette frit."}
             className="w-full resize-y rounded-xl border border-slate-200 px-3.5 py-3 text-sm leading-relaxed text-slate-900 placeholder:text-slate-400 focus:border-[#FF6B4A] focus:outline-none focus:ring-2 focus:ring-[#FF6B4A]/10"

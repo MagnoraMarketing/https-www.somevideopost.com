@@ -90,7 +90,7 @@ export async function GET() {
   }
   if (!wan.ok) {
     blockers.push(
-      `${wan.missing.join(" og ")} mangler i Vercel — WAN 3.0 kan ikke generere klip. ` +
+      `${wan.missing.join(" og ")} mangler i Vercel — WAN kan ikke generere klip. ` +
         "Tjek /api/test/wan.",
     );
   }

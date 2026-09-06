@@ -66,7 +66,7 @@ const FAQ = [
   },
   {
     q: "What does it cost?",
-    a: "Studio access costs €10/mo and gives you 15 AI posts a month plus direct social media sharing. Presentation videos are billed separately, per video — €50 each — so you only pay for the videos you actually make. No commitment. See full details on the pricing page.",
+    a: "Studio access costs €10/mo and gives you 15 AI posts a month plus direct social media sharing. Presentation videos are billed separately, per video — €14 each — so you only pay for the videos you actually make. No commitment. See full details on the pricing page.",
   },
 ];
 
@@ -428,7 +428,7 @@ export default function WhySomeVideoPostEnPage() {
         <div className="relative mx-auto max-w-3xl px-6 text-center">
           <h2 className="text-3xl font-bold md:text-4xl">Ready to market your property on autopilot?</h2>
           <p className="mx-auto mt-4 max-w-lg text-slate-300">
-            Go from property link to finished video and post in minutes. Studio access from €10/mo, videos from €50 each.
+            Go from property link to finished video and post in minutes. Studio access from €10/mo, videos from €14 each.
           </p>
           <Link href="/signup" className="mt-8 inline-flex items-center gap-2 rounded-xl px-8 py-4 text-base font-bold text-white shadow-[0_0_35px_rgba(255,107,74,0.4)] transition-opacity hover:opacity-90" style={{ background: ORANGE_GRADIENT }}>
             Get started today <ArrowRight size={18} />

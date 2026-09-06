@@ -66,7 +66,7 @@ const FAQ = [
   },
   {
     q: "Was kostet es?",
-    a: "Studio-Zugang kostet 10 €/Monat und gibt dir 15 KI-Beiträge im Monat sowie direktes Teilen in sozialen Medien. Präsentationsvideos werden separat pro Video abgerechnet — 50 € pro Video — sodass du nur für die Videos zahlst, die du tatsächlich erstellst. Keine Bindung. Alle Details findest du auf der Preisseite.",
+    a: "Studio-Zugang kostet 10 €/Monat und gibt dir 15 KI-Beiträge im Monat sowie direktes Teilen in sozialen Medien. Präsentationsvideos werden separat pro Video abgerechnet — 14 € pro Video — sodass du nur für die Videos zahlst, die du tatsächlich erstellst. Keine Bindung. Alle Details findest du auf der Preisseite.",
   },
 ];
 
@@ -429,7 +429,7 @@ export default function WhySomeVideoPostDePage() {
         <div className="relative mx-auto max-w-3xl px-6 text-center">
           <h2 className="text-3xl font-bold md:text-4xl">Bereit, deine Immobilie auf Autopilot zu vermarkten?</h2>
           <p className="mx-auto mt-4 max-w-lg text-slate-300">
-            Vom Immobilienlink zu fertigem Video und Beitrag in Minuten. Studio-Zugang ab 10 €/Monat, Videos ab 50 € pro Stück.
+            Vom Immobilienlink zu fertigem Video und Beitrag in Minuten. Studio-Zugang ab 10 €/Monat, Videos ab 14 € pro Stück.
           </p>
           <Link href="/signup" className="mt-8 inline-flex items-center gap-2 rounded-xl px-8 py-4 text-base font-bold text-white shadow-[0_0_35px_rgba(255,107,74,0.4)] transition-opacity hover:opacity-90" style={{ background: ORANGE_GRADIENT }}>
             Jetzt starten <ArrowRight size={18} />

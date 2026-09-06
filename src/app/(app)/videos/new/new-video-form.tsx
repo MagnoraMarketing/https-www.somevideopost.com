@@ -13,6 +13,7 @@ import Link from "next/link";
 import { scrapePropertyUrl, type ScrapedProperty } from "@/services/scrape-property";
 import { ScreenshotImporter } from "@/components/screenshot-importer";
 import { StyleSelector } from "@/components/video/style-selector";
+import { PriceRows } from "@/components/pricing/price-rows";
 import { DEFAULT_VIDEO_STYLE, type VideoStyleId } from "@/lib/video-styles";
 
 const ROOM_LABELS = [
@@ -289,18 +290,13 @@ export function NewVideoForm() {
 
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Priser</p>
-                <div className="space-y-2">
-                  {[
-                    { label: "Præsentationsvideo", price: "€50" },
-                    { label: "Studie-adgang", price: "€10 / md" },
-                    { label: "Pr. opslag", price: "5 kr." },
-                  ].map((row) => (
-                    <div key={row.label} className="flex items-center justify-between text-sm">
-                      <span className="text-slate-600">{row.label}</span>
-                      <span className="font-semibold text-slate-900">{row.price}</span>
-                    </div>
-                  ))}
-                </div>
+                <PriceRows
+                  rows={[
+                    { label: "Præsentationsvideo", price: "video" },
+                    { label: "Studie-adgang", price: "subscription", suffix: "/ md." },
+                    { label: "Pr. opslag", price: "aiPost", decimals: true },
+                  ]}
+                />
               </div>
             </div>
 

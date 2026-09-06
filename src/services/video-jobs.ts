@@ -6,9 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { DEFAULT_VIDEO_STYLE, isVideoStyleId, type VideoStyleId } from "@/lib/video-styles";
 import { advanceJob, type AdvanceResult, type JobState } from "@/services/video/job";
-import { downloadImages } from "@/services/property-import/download-images";
-import { storeSourceImages } from "@/services/property-import/store-images";
-import type { ImageCandidate } from "@/services/property-import/extract-images";
+import { adoptChosenImages } from "@/services/property-import";
 import type { AspectRatio } from "@/services/video/assembler";
 import { loadScenes } from "@/services/video/wan-generator";
 
@@ -64,16 +62,26 @@ export async function createPropertyVideoOrder(formData: FormData): Promise<void
     redirect("/videos?error=create");
   }
 
-  // Images the customer chose in the form are already in our storage, but the
-  // pipeline needs validated metadata (dimensions, hash) for each one — so they
-  // are read back through the same download/validate path as an import.
+  // The images the customer chose in the form are downloaded, validated and
+  // re-hosted in Supabase Storage right away: those stored copies — not the
+  // listing's own URLs — are what the AI Director reads and WAN animates.
+  // The job re-tries this on its own if it does not finish here.
   if (imageUrls.length) {
     try {
-      const candidates: ImageCandidate[] = imageUrls.map((url, position) => ({
-        url, method: "upload", position, score: 100,
-      }));
-      const { images } = await downloadImages(candidates, imageUrls.length);
-      if (images.length) await storeSourceImages(user.id, order.id, images);
+      const adopted = await adoptChosenImages(user.id, order.id, imageUrls, {
+        referer: sourceUrl ?? undefined,
+      });
+      if (adopted.stored.length) {
+        await supabase
+          .from("video_orders")
+          .update({ image_urls: adopted.stored.map((image) => image.storageUrl) })
+          .eq("id", order.id);
+      } else {
+        console.warn(
+          `[video-jobs] none of the ${imageUrls.length} chosen images could be stored:`,
+          adopted.failures.slice(0, 3).map((f) => f.reason).join("; "),
+        );
+      }
     } catch (e) {
       console.error("[video-jobs] could not adopt form images:", e instanceof Error ? e.message : String(e));
     }
@@ -137,6 +145,50 @@ export async function pollVideoJob(orderId: string): Promise<JobStatusView | { e
   } catch (e) {
     return { error: e instanceof Error ? e.message : String(e) };
   }
+}
+
+/**
+ * Store the sales text that belongs to a video.
+ *
+ * Everything the pipeline generates is kept with its order — the photographs
+ * in Storage, the storyboard and scenes in their tables, and the caption here
+ * — so a reload shows the customer what they already have instead of writing
+ * a new text over the one they just edited.
+ */
+export async function saveVideoCaption(
+  orderId: string,
+  caption: string,
+  platform?: string,
+): Promise<{ error?: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Ikke logget ind" };
+
+  const { error } = await supabase
+    .from("video_orders")
+    .update({
+      caption: caption.slice(0, 4000),
+      ...(platform ? { caption_platform: platform.slice(0, 20) } : {}),
+    })
+    .eq("id", orderId)
+    .eq("user_id", user.id);
+
+  if (error) {
+    console.error("[video-jobs] could not save caption:", error.message);
+    return { error: "Teksten kunne ikke gemmes" };
+  }
+  return {};
+}
+
+/**
+ * Try the import again for a job that is waiting for photographs.
+ *
+ * The listing may have been temporarily unreachable, or blocked us on one
+ * attempt and not the next, so the panel that asks for uploads offers this
+ * before the customer has to go find the files themselves.
+ */
+export async function retryImageImport(orderId: string): Promise<{ error?: string }> {
+  return restartVideoJob(orderId, "pending");
 }
 
 /** Put a stalled or failed job back into the pipeline from the top. */

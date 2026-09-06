@@ -10,7 +10,7 @@ import { CinematicWalkthrough } from "@/components/walkthrough/cinematic-walkthr
 export const metadata: Metadata = {
   title: "Priser — SOME VIDEO POST | AI-video og sociale medier til udlejere",
   description:
-    "Enkel pris for somevideopost.com: €10/md. for studie-adgang med AI-opslag og direkte deling til sociale medier, og €50 pr. præsentationsvideo — betal kun for de videoer, du bruger. Ingen binding.",
+    "Enkel pris for somevideopost.com: 75 kr./md. for studie-adgang med AI-opslag og direkte deling til sociale medier, og 99 kr. pr. præsentationsvideo — betal kun for de videoer, du bruger. Ingen binding.",
   keywords:
     "somevideopost priser, AI video pris, sociale medier udlejning, feriebolig markedsføring pris, præsentationsvideo pris",
   alternates: {
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Priser — SOME VIDEO POST",
     description:
-      "€10/md. for studie-adgang med AI-opslag og direkte deling, og €50 pr. præsentationsvideo. Betal kun for det, du bruger. Ingen binding.",
+      "75 kr./md. for studie-adgang med AI-opslag og direkte deling, og 99 kr. pr. præsentationsvideo. Betal kun for det, du bruger. Ingen binding.",
     type: "website",
     siteName: "somevideopost.com",
     url: "https://www.somevideopost.com/priser",

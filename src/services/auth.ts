@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { cookies, headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { missingPublicSupabaseVars } from "@/lib/supabase/config";
 import { coerceLocale, type Locale } from "@/lib/i18n";
 import { coerceCurrency, currencyForLocale, isCurrency, type Currency } from "@/lib/currency";
 import type { AuthFormState } from "@/types/auth";
@@ -33,21 +34,69 @@ function authErrorMessage(error: { message?: string; status?: number }): string 
   return "Kontoen kunne ikke oprettes. Kontrollér din email og adgangskode, og prøv igen.";
 }
 
+/** Hosts that no confirmation email may ever point at — the link is dead the
+ * moment it leaves the developer's own machine. */
+function isLocalHost(host: string): boolean {
+  const name = host.split(":")[0].toLowerCase();
+  return (
+    name === "localhost" ||
+    name === "127.0.0.1" ||
+    name === "::1" ||
+    name === "0.0.0.0" ||
+    name.endsWith(".local")
+  );
+}
+
+/** The deployment's public base URL, without a trailing slash. */
+function configuredAppUrl(): string {
+  const raw = process.env.NEXT_PUBLIC_APP_URL ?? process.env.APP_URL ?? "https://www.somevideopost.com";
+  return raw.replace(/\/+$/, "");
+}
+
 /**
  * Absolute URL for the confirmation link Supabase emails out.
  *
  * Derived from the request rather than a fixed env var, so a signup on a
  * preview deployment confirms back to that same deployment instead of bouncing
- * the user to production.
+ * the user to production — except when the request came from a local dev
+ * server, where a localhost link is a guaranteed "connection refused" in the
+ * recipient's inbox. Those fall back to the configured public URL.
  */
 async function emailRedirectUrl(): Promise<string> {
   const h = await headers();
   const host = h.get("x-forwarded-host") ?? h.get("host");
-  const proto = h.get("x-forwarded-proto") ?? (host?.startsWith("localhost") ? "http" : "https");
-  const base = host
-    ? `${proto}://${host}`
-    : process.env.NEXT_PUBLIC_APP_URL ?? process.env.APP_URL ?? "https://www.somevideopost.com";
+  const proto = h.get("x-forwarded-proto") ?? "https";
+  const base = host && !isLocalHost(host) ? `${proto}://${host}` : configuredAppUrl();
   return `${base}/auth/callback`;
+}
+
+/**
+ * The Supabase client, or a message the form can render.
+ *
+ * On a deployment whose environment variables are not set — a preview branch
+ * that never got them, most often — `createClient()` throws, and a throw
+ * inside a Server Action reaches the user as Next's blank "A server error
+ * occurred" page. There is nothing they can do with that. Naming the missing
+ * variable at least tells whoever is testing what to go and set.
+ */
+async function clientOrConfigError(): Promise<
+  { supabase: Awaited<ReturnType<typeof createClient>>; error?: undefined } | { supabase?: undefined; error: string }
+> {
+  const missing = missingPublicSupabaseVars();
+  if (missing.length) {
+    console.error(`[auth] Supabase is not configured: ${missing.join(", ")} missing`);
+    return {
+      error:
+        `Log ind er ikke sat op på dette miljø: ${missing.join(" og ")} mangler. ` +
+        "Tilføj variablerne i Vercel (Settings → Environment Variables) for netop dette miljø, og deploy igen.",
+    };
+  }
+  try {
+    return { supabase: await createClient() };
+  } catch (e) {
+    console.error("[auth] Supabase client unavailable:", e instanceof Error ? e.message : String(e));
+    return { error: "Login-tjenesten er ikke tilgængelig lige nu. Prøv igen om lidt." };
+  }
 }
 
 export async function signUpAction(
@@ -74,10 +123,12 @@ export async function signUpAction(
     .slice(0, 10);
 
   if (!email || !password) {
-    return { error: "Email and password are required." };
+    return { error: "Email og adgangskode skal udfyldes." };
   }
 
-  const supabase = await createClient();
+  const { supabase, error: configError } = await clientOrConfigError();
+  if (!supabase) return { error: configError };
+
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -122,6 +173,9 @@ export async function signUpAction(
         "Din konto er oprettet. Vi har sendt en bekræftelsesmail til " +
         email +
         " — bekræft din adresse, og log derefter ind.",
+      // The form turns this into a visible "Gå til login" button: the account
+      // exists, so the only thing left to do is log in.
+      loginHref: "/login?registered=1",
     };
   }
 
@@ -136,17 +190,25 @@ export async function signInAction(
   const password = String(formData.get("password") ?? "");
 
   if (!email || !password) {
-    return { error: "Email and password are required." };
+    return { error: "Email og adgangskode skal udfyldes." };
   }
 
-  const supabase = await createClient();
+  const { supabase, error: configError } = await clientOrConfigError();
+  if (!supabase) return { error: configError };
+
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
 
   if (error) {
-    return { error: "Incorrect email or password." };
+    // "Email not confirmed" is not a wrong password, and telling the user it
+    // is sends them off resetting a password that works.
+    if (/confirm/i.test(error.message) || error.code === "email_not_confirmed") {
+      return { error: "Din email er ikke bekræftet endnu. Åbn bekræftelseslinket i mailen, og log derefter ind." };
+    }
+    console.error("[auth] sign-in failed:", { status: error.status, code: error.code, message: error.message });
+    return { error: "Forkert email eller adgangskode." };
   }
 
   // Re-apply the account's saved language & currency for this session.
@@ -159,7 +221,9 @@ export async function signInAction(
 }
 
 export async function signOutAction(): Promise<void> {
-  const supabase = await createClient();
-  await supabase.auth.signOut();
+  const { supabase } = await clientOrConfigError();
+  // Signing out of a deployment that cannot reach Supabase still has to land
+  // the user on the login page rather than on an error screen.
+  if (supabase) await supabase.auth.signOut();
   redirect("/login");
 }

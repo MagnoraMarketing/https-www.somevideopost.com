@@ -44,8 +44,10 @@ export const PRICES = {
   starter:      { dkk: 37500,  eur: 5000 },   // 375 kr. / €50 per month — 1 video/mo
   pro:          { dkk: 73900,  eur: 9900 },   // 739 kr. / €99 per month — 2 videos/mo
   business:     { dkk: 222900, eur: 29900 },  // 2.229 kr. / €299 per month — 6 videos/mo
-  // Pay-per-use presentation video (charged when generation reaches 80%)
-  video:        { dkk: 37500,  eur: 5000 },   // 375 kr. / €50 per video
+  // Pay-per-use presentation video (charged when generation reaches 80%).
+  // The EUR amount is the DKK price converted and rounded to a whole euro, so
+  // the two currencies stay within a few percent of each other.
+  video:        { dkk: 9900,   eur: 1400 },   // 99 kr. / €14 per video
   // Entry subscription that funds the monthly post balance (clearly disclosed).
   subscription: { dkk: 7500,   eur: 1000 },   // 75 kr. / €10 per month
   aiPost:       { dkk: 500,    eur: 67 },     // 5 kr. / €0.67 — 1 credit = 1 post

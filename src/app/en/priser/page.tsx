@@ -11,7 +11,7 @@ const BASE = "https://www.somevideopost.com";
 export const metadata: Metadata = {
   title: "Pricing — SOME VIDEO POST | AI video & social media for hosts",
   description:
-    "Simple pricing for somevideopost.com: €10/mo for studio access with AI posts and direct social sharing, and €50 per presentation video — pay only for the videos you use. No commitment.",
+    "Simple pricing for somevideopost.com: €10/mo for studio access with AI posts and direct social sharing, and €14 per presentation video — pay only for the videos you use. No commitment.",
   keywords:
     "somevideopost pricing, AI video price, social media rental marketing, vacation rental marketing price, presentation video price",
   alternates: {
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Pricing — SOME VIDEO POST",
     description:
-      "€10/mo for studio access with AI posts and direct sharing, and €50 per presentation video. Pay only for what you use. No commitment.",
+      "€10/mo for studio access with AI posts and direct sharing, and €14 per presentation video. Pay only for what you use. No commitment.",
     type: "website",
     siteName: "somevideopost.com",
     locale: "en_GB",

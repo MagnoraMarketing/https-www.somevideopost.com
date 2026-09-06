@@ -1,18 +1,36 @@
 import Link from "next/link";
+import { getCurrency } from "@/lib/locale-server";
+import { formatPriceKey, type PriceKey } from "@/lib/currency";
 import {
   Sparkles, Clapperboard, SendHorizontal, UploadCloud, ArrowRight, Crown,
   Film, Camera, Home as HomeIcon, Sun, Mic, Globe, Music, Type,
   Share2, Zap, Target, Wand2,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+
+/**
+ * A tool's badge: either fixed text, or a price from the shared table rendered
+ * in the account's currency.
+ */
+type ToolTag = { text: string } | { price: PriceKey; suffix: string; decimals?: boolean };
+
+type Tool = {
+  href: string;
+  icon: LucideIcon;
+  title: string;
+  text: string;
+  tag: ToolTag;
+  gradient: string;
+};
 
 // The tools that actually exist today — the studio's clickable entry points.
-const TOOLS = [
+const TOOLS: Tool[] = [
   {
     href: "/posts/new",
     icon: SendHorizontal,
     title: "Generér SoMe-opslag",
     text: "Indsæt et boliglink → AI skriver en sælgende tekst tilpasset platformen.",
-    tag: "5 kr / opslag",
+    tag: { price: "aiPost" as const, suffix: "/ opslag", decimals: true },
     gradient: "linear-gradient(135deg,#6366F1,#8B5CF6)",
   },
   {
@@ -20,7 +38,7 @@ const TOOLS = [
     icon: Clapperboard,
     title: "Præsentationsvideo",
     text: "Forvandl boligens billeder til en cinematisk video med kamerabevægelser og musik.",
-    tag: "€50 / video",
+    tag: { price: "video" as const, suffix: "/ video" },
     gradient: "linear-gradient(135deg,#FFB36B,#FF6B4A)",
   },
   {
@@ -28,7 +46,7 @@ const TOOLS = [
     icon: UploadCloud,
     title: "Upload færdig video",
     text: "Har du lavet en video i Veo3? Læg den ind, klar til download og deling.",
-    tag: "Gratis",
+    tag: { text: "Gratis" },
     gradient: "linear-gradient(135deg,#34D399,#059669)",
   },
 ];
@@ -49,7 +67,17 @@ const FEATURES = [
   { icon: Target, title: "Marketing-optimeret" },
 ];
 
-export default function StudioPage() {
+export default async function StudioPage() {
+  const currency = await getCurrency();
+  const videoPrice = formatPriceKey("video", currency);
+  const subscriptionPrice = formatPriceKey("subscription", currency);
+
+  /** A tool's price badge, in the account's own currency. */
+  function tagText(tag: ToolTag): string {
+    if ("text" in tag) return tag.text;
+    return `${formatPriceKey(tag.price, currency, tag.decimals ? { decimals: true } : undefined)} ${tag.suffix}`;
+  }
+
   return (
     <div className="min-h-full text-white" style={{ background: "radial-gradient(1200px 500px at 15% -10%, #1b1740 0%, transparent 55%), radial-gradient(1000px 500px at 100% 0%, #10233f 0%, transparent 50%), #080b16" }}>
       {/* ── Header ── */}
@@ -99,7 +127,7 @@ export default function StudioPage() {
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl shadow-lg" style={{ background: t.gradient }}>
                   <t.icon size={22} className="text-white" />
                 </div>
-                <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-semibold text-slate-300">{t.tag}</span>
+                <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-semibold text-slate-300">{tagText(t.tag)}</span>
               </div>
               <h3 className="text-base font-bold">{t.title}</h3>
               <p className="mt-1.5 text-sm leading-relaxed text-slate-400">{t.text}</p>
@@ -136,9 +164,9 @@ export default function StudioPage() {
                 <Crown size={22} className="text-orange-300" />
               </div>
               <div>
-                <h2 className="text-xl font-bold">Studie-adgang — €10/md</h2>
+                <h2 className="text-xl font-bold">Studie-adgang — {subscriptionPrice}/md.</h2>
                 <p className="mt-1 max-w-lg text-sm leading-relaxed text-slate-300">
-                  Adgang til studiet og din månedlige opslag-saldo. Præsentationsvideoer betales pr. stk. (€50). Opsig når som helst.
+                  Adgang til studiet og din månedlige opslag-saldo. Præsentationsvideoer betales pr. stk. ({videoPrice}). Opsig når som helst.
                 </p>
               </div>
             </div>

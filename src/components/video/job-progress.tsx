@@ -1,8 +1,9 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useTransition } from "react";
 import { Loader2, CheckCircle2, AlertCircle, UploadCloud, RefreshCw } from "lucide-react";
 import { SelectedStyleBadge } from "./style-selector";
+import { retryImageImport } from "@/services/video-jobs";
 import type { VideoStyleId } from "@/lib/video-styles";
 
 /**
@@ -184,6 +185,17 @@ function UploadFallback({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [dragging, setDragging] = useState(false);
+  const [retrying, startRetry] = useTransition();
+
+  // The listing may simply have been unreachable on the one attempt we made.
+  function retryImport() {
+    setError("");
+    startRetry(async () => {
+      const res = await retryImageImport(orderId);
+      if (res.error) { setError(res.error); return; }
+      onUploaded();
+    });
+  }
 
   async function upload(files: FileList | File[]) {
     const list = Array.from(files);
@@ -235,6 +247,16 @@ function UploadFallback({
         </button>
         <p className="mt-2 text-xs text-amber-700">Træk og slip, eller klik. JPG, PNG eller WEBP.</p>
       </div>
+
+      <button
+        type="button"
+        onClick={retryImport}
+        disabled={retrying}
+        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-amber-300 bg-white/70 px-4 py-2 text-xs font-semibold text-amber-800 transition-colors hover:bg-white disabled:opacity-50"
+      >
+        {retrying ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
+        {retrying ? "Prøver igen…" : "Prøv at hente boligens billeder igen"}
+      </button>
 
       {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
 

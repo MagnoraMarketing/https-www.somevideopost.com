@@ -18,6 +18,11 @@ interface AuthFormProps {
   footer: { text: string; linkLabel: string; href: string };
   /** Show language + currency pickers (used on signup). */
   showPreferences?: boolean;
+  /**
+   * Message from wherever the user came from — the email-confirmation callback
+   * above all, whose outcome is otherwise invisible on this page.
+   */
+  banner?: { tone: "info" | "error"; text: string };
 }
 
 const initialState: AuthFormState = {};
@@ -33,6 +38,7 @@ export function AuthForm({
   description,
   footer,
   showPreferences = false,
+  banner,
 }: AuthFormProps) {
   const [state, formAction, isPending] = useActionState(
     action,
@@ -58,6 +64,18 @@ export function AuthForm({
       </h1>
       <p className="mt-1 text-sm text-[#6B6B76]">{description}</p>
 
+      {banner && (
+        <p
+          className={`mt-4 rounded-lg border px-3 py-2 text-sm ${
+            banner.tone === "error"
+              ? "border-red-200 bg-red-50 text-red-700"
+              : "border-emerald-200 bg-emerald-50 text-emerald-800"
+          }`}
+        >
+          {banner.text}
+        </p>
+      )}
+
       <form action={formAction} className="mt-6 flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
           <label
@@ -81,7 +99,7 @@ export function AuthForm({
             htmlFor="password"
             className="text-sm font-medium text-[#1B1B1F]"
           >
-            Password
+            Adgangskode
           </label>
           <input
             id="password"
