@@ -2,7 +2,7 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { resolveVideoStyle, DEFAULT_VIDEO_STYLE, type VideoStyleId } from "@/lib/video-styles";
 import {
-  importPropertyFromUrl, PropertyImportError,
+  adoptChosenImages, importPropertyFromUrl, PropertyImportError,
   type ImportDiagnostics, type StoredImage,
 } from "@/services/property-import";
 import { analyzeImages, buildStoryboard, selectImages, type ImageAnalysis, type Storyboard } from "./ai-director";
@@ -192,6 +192,44 @@ async function loadStoredImages(orderId: string): Promise<StoredImage[]> {
 }
 
 /**
+ * Point the order's `image_urls` at our own copies in Supabase Storage.
+ *
+ * What the customer sees under "Dine billeder" then survives the listing:
+ * third-party URLs expire, get signed, or start refusing our requests, while
+ * the stored copies are the exact files WAN will animate.
+ */
+async function syncOrderImageUrls(orderId: string, images: StoredImage[]): Promise<void> {
+  if (!images.length) return;
+  await patchOrder(orderId, { image_urls: images.map((image) => image.storageUrl) });
+}
+
+/**
+ * Store the photographs the customer already picked in the order form.
+ *
+ * These are the images the video page lists under "Dine billeder", so failing
+ * the job for want of photographs while showing twenty of them on the same
+ * screen is never acceptable — this is what closes that gap. Adoption is
+ * idempotent: storage upserts on (order_id, image_hash).
+ */
+async function adoptOrderImages(order: JobOrder): Promise<StoredImage[]> {
+  const urls = (order.image_urls ?? []).filter((url) => /^https?:\/\//i.test(url));
+  if (!urls.length) return [];
+
+  try {
+    const result = await adoptChosenImages(order.user_id, order.id, urls, {
+      referer: order.source_url ?? undefined,
+    });
+    if (result.failures.length) {
+      console.warn(`${LOG} order ${order.id}: ${result.failures.length} chosen image(s) could not be stored`);
+    }
+    return result.stored;
+  } catch (e) {
+    console.error(`${LOG} order ${order.id} adoption failed: ${e instanceof Error ? e.message : String(e)}`);
+    return [];
+  }
+}
+
+/**
  * Advance the job by one step.
  *
  * Every branch either moves the job to the next state or reports why it can't.
@@ -218,7 +256,19 @@ export async function advanceJob(orderId: string): Promise<AdvanceResult> {
     case "fetching_property":
     case "extracting_images":
     case "downloading_images": {
-      const existing = await loadStoredImages(orderId);
+      let existing = await loadStoredImages(orderId);
+
+      // The photographs the customer picked in the order form are the ones the
+      // video page is already showing them. Store those before reading the
+      // listing again — most "we could not retrieve the photos" cases are
+      // simply images that were never adopted into storage.
+      if (existing.length < MIN_IMAGES_FOR_IMPORT_SKIP && order.image_urls?.length) {
+        const adopted = await adoptOrderImages(order);
+        if (adopted.length) {
+          await syncOrderImageUrls(orderId, adopted);
+          existing = await loadStoredImages(orderId);
+        }
+      }
 
       // Enough real photographs are already in storage — from a manual upload,
       // or the ones the customer picked in the order form. Reading the listing
@@ -245,11 +295,17 @@ export async function advanceJob(orderId: string): Promise<AdvanceResult> {
       try {
         // Storage upserts on (order_id, image_hash), so an import on top of a
         // partial form selection merges rather than duplicating.
-        const imported = await importPropertyFromUrl(order.user_id, orderId, order.source_url);
+        // A second attempt re-reads the listing instead of trusting the cached
+        // candidate list that already failed to produce a usable photograph.
+        const imported = await importPropertyFromUrl(order.user_id, orderId, order.source_url, {
+          forceRefresh: !!order.diagnostics?.import,
+        });
         const diagnostics = await mergeDiagnostics(order, {
           import: imported.diagnostics,
           propertyTitle: imported.property.title,
         });
+        // Every photograph the pipeline will use now lives in our own storage.
+        await syncOrderImageUrls(orderId, await loadStoredImages(orderId));
         // Keep the customer's own title if they typed one.
         if (!order.title && imported.property.title) {
           await patchOrder(orderId, { title: imported.property.title.slice(0, 200) });
@@ -265,9 +321,16 @@ export async function advanceJob(orderId: string): Promise<AdvanceResult> {
             return progressResult(order, "analyzing_images", order.diagnostics ?? {}, { status: "processing" });
           }
           // "We couldn't reliably retrieve the property photos" — the customer
-          // uploads instead. Never a generated stand-in.
-          const state: JobState = e.code === "no_images" ? "awaiting_images" : "failed";
-          return fail(order, e.message, state);
+          // uploads instead. Never a generated stand-in. Every import failure
+          // ends here, not in "failed": an unreadable listing is not a dead
+          // order while uploading the photos still finishes the video.
+          const chosen = (order.image_urls ?? []).length;
+          const message = chosen
+            ? `Vi kunne hverken hente boligens billeder fra annoncen eller de ${chosen} billeder, du valgte — siden afviser vores forespørgsler. Upload dine egne billeder af boligen for at fortsætte.`
+            : /upload/i.test(e.message)
+              ? e.message
+              : `${e.message} Upload boligens billeder for at fortsætte.`;
+          return fail(order, message, "awaiting_images");
         }
         return fail(order, e instanceof Error ? e.message : String(e));
       }
@@ -503,6 +566,9 @@ export async function resumeWithUploadedImages(orderId: string): Promise<void> {
     status: "processing",
     error_message: null,
   });
+  // The strip on the video page lists order.image_urls; after an upload those
+  // are the stored copies, so it shows what the film will actually be made of.
+  await syncOrderImageUrls(orderId, await loadStoredImages(orderId));
 }
 
 export function transitionSecondsFor(styleId: VideoStyleId): number {

@@ -106,7 +106,7 @@ export async function createAiCreditCheckout(formData: FormData): Promise<void> 
  *
  * Delegates to the property-video pipeline, which imports the listing's actual
  * photographs (or adopts the ones the customer picked), lets the AI Director
- * choose and storyboard them, and drives WAN 3.0 from those real images. The
+ * choose and storyboard them, and drives WAN from those real images. The
  * name is kept because the order form's `action` points at it.
  */
 export async function createVideoOrderCheckout(formData: FormData): Promise<void> {

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { readImageInfo } from "@/services/property-import/image-file";
 import { storeSourceImages } from "@/services/property-import/store-images";
-import { IMAGE_LIMITS } from "@/services/property-import/download-images";
+import { CHOSEN_IMAGE_LIMITS, IMAGE_LIMITS } from "@/services/property-import/download-images";
 import { resumeWithUploadedImages } from "@/services/video/job";
 import type { DownloadedImage } from "@/services/property-import/download-images";
 
@@ -54,7 +54,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       rejected.push({ name: file.name, reason: "ikke et gyldigt JPG-, PNG- eller WEBP-billede" });
       continue;
     }
-    if (info.width < IMAGE_LIMITS.minWidth || info.height < IMAGE_LIMITS.minHeight) {
+    // A file the customer picked themselves only has to be big enough to
+    // animate — the strict import thresholds exist to sift photos out of a
+    // page full of icons, which is not the job here.
+    if (info.width < CHOSEN_IMAGE_LIMITS.minWidth || info.height < CHOSEN_IMAGE_LIMITS.minHeight) {
       rejected.push({ name: file.name, reason: `for lav opløsning (${info.width}x${info.height})` });
       continue;
     }

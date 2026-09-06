@@ -47,11 +47,21 @@ function setLocaleCookie(res: NextResponse, locale: Locale) {
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Supabase appends its one-time confirmation code to the project's Site URL,
-  // which points at the site root. Forward those to the callback route so a
-  // link that was already emailed still completes, rather than landing on the
-  // front page where nothing exchanges it for a session.
-  if (pathname === "/" && request.nextUrl.searchParams.has("code")) {
+  // Supabase appends its one-time confirmation code (or token_hash) to the
+  // project's Site URL, which usually points at the site root — and on a
+  // freshly created project at http://localhost:3000. Forward those to the
+  // callback route from wherever they land, so a link that was already emailed
+  // still completes rather than dying on a page that ignores it.
+  //
+  // /api/* is deliberately excluded: the Facebook and Google OAuth callbacks
+  // live there and carry a `code` of their own.
+  const hasAuthCode =
+    request.nextUrl.searchParams.has("code") || request.nextUrl.searchParams.has("token_hash");
+  if (
+    hasAuthCode &&
+    !pathname.startsWith("/api/") &&
+    !pathname.startsWith("/auth/")
+  ) {
     const url = request.nextUrl.clone();
     url.pathname = "/auth/callback";
     return NextResponse.redirect(url);

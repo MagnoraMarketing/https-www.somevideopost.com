@@ -25,5 +25,23 @@ export async function resolve(specifier, context, nextResolve) {
       } catch { /* try the next candidate */ }
     }
   }
+
+  // Relative imports are extensionless too ("./image-file"), which Node's ESM
+  // resolver does not complete on its own. Without this, reaching one module
+  // from the harness depends on which of its neighbours it happens to import.
+  if (specifier.startsWith("./") || specifier.startsWith("../")) {
+    try {
+      return await nextResolve(specifier, context);
+    } catch (e) {
+      const base = new URL(specifier, context.parentURL).href;
+      for (const candidate of [`${base}.ts`, `${base}.tsx`, `${base}/index.ts`]) {
+        try {
+          return await nextResolve(candidate, context);
+        } catch { /* try the next candidate */ }
+      }
+      throw e;
+    }
+  }
+
   return nextResolve(specifier, context);
 }

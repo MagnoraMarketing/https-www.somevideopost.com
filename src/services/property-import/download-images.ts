@@ -44,42 +44,95 @@ export const IMAGE_LIMITS = {
   timeoutMs: 20_000,
 } as const;
 
-function rejectionReason(info: ImageInfo): string | null {
+export type ImageLimits = { -readonly [K in keyof typeof IMAGE_LIMITS]: number };
+
+/**
+ * Thresholds for photographs the customer already chose — the listing images
+ * shown in the order form, or files they uploaded themselves.
+ *
+ * The strict limits above exist to sort real photos out of a page full of
+ * icons, banners and tracking pixels. That job is already done for a picked
+ * image, so applying them again only throws away photographs the customer can
+ * see on their own screen. A generous floor still keeps favicons out.
+ */
+export const CHOSEN_IMAGE_LIMITS: ImageLimits = {
+  ...IMAGE_LIMITS,
+  minWidth: 320,
+  minHeight: 200,
+  minBytes: 4 * 1024,
+  maxAspectRatio: 4,
+};
+
+export type DownloadOptions = {
+  /**
+   * The listing page the images were found on. Sent as `Referer`: many CDNs
+   * serve a photo to a browser coming from the listing and answer 403 to a
+   * bare server-side request for the very same URL.
+   */
+  referer?: string;
+  /** Validation thresholds; defaults to the strict {@link IMAGE_LIMITS}. */
+  limits?: ImageLimits;
+};
+
+function rejectionReason(info: ImageInfo, limits: ImageLimits): string | null {
   const { width, height, byteLength } = info;
-  if (byteLength < IMAGE_LIMITS.minBytes) return `for lille fil (${byteLength} bytes)`;
-  if (width < IMAGE_LIMITS.minWidth || height < IMAGE_LIMITS.minHeight) {
+  if (byteLength < limits.minBytes) return `for lille fil (${byteLength} bytes)`;
+  if (width < limits.minWidth || height < limits.minHeight) {
     return `for lav opløsning (${width}x${height})`;
   }
   const ratio = Math.max(width / height, height / width);
-  if (ratio > IMAGE_LIMITS.maxAspectRatio) return `banner-format (${width}x${height})`;
+  if (ratio > limits.maxAspectRatio) return `banner-format (${width}x${height})`;
   return null;
 }
 
-async function downloadOne(candidate: ImageCandidate): Promise<DownloadedImage | DownloadFailure> {
-  try {
-    const res = await safeFetch(candidate.url, {
-      timeoutMs: IMAGE_LIMITS.timeoutMs,
-      maxBytes: IMAGE_LIMITS.maxBytes,
-      accept: "image/avif,image/webp,image/jpeg,image/png,image/*;q=0.8,*/*;q=0.5",
-    });
+const IMAGE_ACCEPT = "image/avif,image/webp,image/jpeg,image/png,image/*;q=0.8,*/*;q=0.5";
 
-    if (res.status !== 200) return { url: candidate.url, reason: `HTTP ${res.status}` };
-    // The declared content-type is a hint only — the magic bytes decide.
-    if (res.contentType && !res.contentType.startsWith("image/")) {
-      return { url: candidate.url, reason: `forkert content-type (${res.contentType})` };
+/** One HTTP attempt, optionally pretending to come from the listing page. */
+async function fetchImage(url: string, limits: ImageLimits, referer?: string) {
+  return safeFetch(url, {
+    timeoutMs: limits.timeoutMs,
+    maxBytes: limits.maxBytes,
+    accept: IMAGE_ACCEPT,
+    headers: referer ? { Referer: referer } : undefined,
+  });
+}
+
+async function downloadOne(
+  candidate: ImageCandidate,
+  options: DownloadOptions = {},
+): Promise<DownloadedImage | DownloadFailure> {
+  const limits = options.limits ?? IMAGE_LIMITS;
+  // Hotlink protection cuts both ways: some CDNs demand a Referer from the
+  // listing, others reject requests that carry one. Try the listing's own
+  // Referer first, then a bare request, before calling the image unavailable.
+  const attempts: (string | undefined)[] = options.referer ? [options.referer, undefined] : [undefined];
+
+  let lastReason = "kunne ikke hentes";
+  for (const referer of attempts) {
+    try {
+      const res = await fetchImage(candidate.url, limits, referer);
+
+      if (res.status !== 200) { lastReason = `HTTP ${res.status}`; continue; }
+      // The declared content-type is a hint only — the magic bytes decide.
+      if (res.contentType && !res.contentType.startsWith("image/")) {
+        lastReason = `forkert content-type (${res.contentType})`;
+        continue;
+      }
+
+      const info = readImageInfo(res.body);
+      if (!info) return { url: candidate.url, reason: "ikke et gyldigt JPG/PNG/WEBP-billede" };
+
+      // A retry cannot change the file's own dimensions — stop here.
+      const rejected = rejectionReason(info, limits);
+      if (rejected) return { url: candidate.url, reason: rejected };
+
+      return { candidate, buffer: res.body, info };
+    } catch (e) {
+      lastReason = (e instanceof UnsafeUrlError || e instanceof Error ? e.message : String(e)).slice(0, 160);
     }
-
-    const info = readImageInfo(res.body);
-    if (!info) return { url: candidate.url, reason: "ikke et gyldigt JPG/PNG/WEBP-billede" };
-
-    const rejected = rejectionReason(info);
-    if (rejected) return { url: candidate.url, reason: rejected };
-
-    return { candidate, buffer: res.body, info };
-  } catch (e) {
-    const reason = e instanceof UnsafeUrlError ? e.message : e instanceof Error ? e.message : String(e);
-    return { url: candidate.url, reason: reason.slice(0, 160) };
   }
+
+  return { url: candidate.url, reason: lastReason };
 }
 
 function isFailure(value: DownloadedImage | DownloadFailure): value is DownloadFailure {
@@ -93,6 +146,7 @@ function isFailure(value: DownloadedImage | DownloadFailure): value is DownloadF
 export async function downloadImages(
   candidates: ImageCandidate[],
   limit: number = IMAGE_LIMITS.maxDownloads,
+  options: DownloadOptions = {},
 ): Promise<DownloadResult> {
   const queue = candidates.slice(0, limit);
   const images: DownloadedImage[] = [];
@@ -101,7 +155,7 @@ export async function downloadImages(
 
   for (let i = 0; i < queue.length; i += IMAGE_LIMITS.concurrency) {
     const batch = queue.slice(i, i + IMAGE_LIMITS.concurrency);
-    const results = await Promise.all(batch.map(downloadOne));
+    const results = await Promise.all(batch.map((candidate) => downloadOne(candidate, options)));
     for (const result of results) {
       if (isFailure(result)) { failures.push(result); continue; }
       if (seenHashes.has(result.info.hash)) {

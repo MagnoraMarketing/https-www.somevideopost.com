@@ -62,6 +62,9 @@ type Props = {
   videoPrice: string;
   videoStyle: VideoStyleId;
   initialJobState: string;
+  /** Sales text stored on the order, if it has one. */
+  initialCaption?: string | null;
+  initialCaptionPlatform?: string | null;
 };
 
 function SharePanel({ videoUrl, accounts, caption, setCaption }: { videoUrl: string; accounts: SocialAccount[]; caption: string; setCaption: (v: string) => void }) {
@@ -193,12 +196,12 @@ function SharePanel({ videoUrl, accounts, caption, setCaption }: { videoUrl: str
   );
 }
 
-export function VideoStatusClient({ orderId, initialStatus, initialVideoUrl, initialVideoUrls, title, description, location, bookingUrl, imageUrls, accounts, initialPaid, videoPrice, videoStyle, initialJobState }: Props) {
+export function VideoStatusClient({ orderId, initialStatus, initialVideoUrl, initialVideoUrls, title, description, location, bookingUrl, imageUrls, accounts, initialPaid, videoPrice, videoStyle, initialJobState, initialCaption, initialCaptionPlatform }: Props) {
   const paid = initialPaid;
   const [status, setStatus] = useState<Status>(initialStatus);
   const [videoUrl, setVideoUrl] = useState<string | undefined>(initialVideoUrl);
   const [videoUrls, setVideoUrls] = useState<string[]>(initialVideoUrls ?? (initialVideoUrl ? [initialVideoUrl] : []));
-  const [caption, setCaption] = useState("");
+  const [caption, setCaption] = useState(initialCaption ?? "");
   const [jobState, setJobState] = useState<string>(initialJobState);
   const [jobLabel, setJobLabel] = useState("Klargør din video…");
   const [jobProgress, setJobProgress] = useState(2);
@@ -271,6 +274,9 @@ export function VideoStatusClient({ orderId, initialStatus, initialVideoUrl, ini
 
           {/* They can prepare the caption while deciding. */}
           <VideoSalesText
+            orderId={orderId}
+            initialPlatform={initialCaptionPlatform ?? undefined}
+            hasStoredCaption={!!initialCaption}
             title={title}
             description={description}
             location={location}
@@ -318,6 +324,9 @@ export function VideoStatusClient({ orderId, initialStatus, initialVideoUrl, ini
         ))}
 
         <VideoSalesText
+          orderId={orderId}
+          initialPlatform={initialCaptionPlatform ?? undefined}
+          hasStoredCaption={!!initialCaption}
           title={title}
           description={description}
           location={location}

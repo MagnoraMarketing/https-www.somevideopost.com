@@ -1,7 +1,7 @@
 import "server-only";
 
 /**
- * WAN 3.0 image-to-video client (Alibaba Cloud Model Studio, Frankfurt).
+ * WAN image-to-video client (Alibaba Cloud Model Studio, Frankfurt).
  *
  * Server-only by construction: the module imports `server-only`, so a client
  * component that reaches for it fails at build time rather than shipping the
@@ -42,6 +42,18 @@ export class WanApiError extends Error {
   }
 }
 
+/**
+ * The image-to-video model used when WAN_MODEL is unset.
+ *
+ * Model Studio has no "WAN 3.0": the image-to-video line runs 2.1 → 2.7, and
+ * the first-frame endpoint this client speaks (`video-synthesis` with
+ * `input.img_url`) covers 2.1 through 2.6. Wan 2.7 moved to a different
+ * request shape, so pointing WAN_MODEL at it needs a client change, not just
+ * a new value. An unknown id is rejected by the API on every single scene,
+ * which is why the default has to be a model that actually exists.
+ */
+export const DEFAULT_WAN_MODEL = "wan2.6-i2v-flash";
+
 /** Which variables are set, without revealing any of their values. */
 export function wanConfigStatus(): { ok: boolean; missing: string[]; model: string; region: string } {
   const missing: string[] = [];
@@ -50,7 +62,7 @@ export function wanConfigStatus(): { ok: boolean; missing: string[]; model: stri
   return {
     ok: missing.length === 0,
     missing,
-    model: process.env.WAN_MODEL || "wan3.0-video",
+    model: process.env.WAN_MODEL || DEFAULT_WAN_MODEL,
     region: process.env.WAN_REGION || "eu-central-1",
   };
 }
@@ -70,7 +82,7 @@ export function getWanConfig(): WanConfig {
     apiKey: apiKey!,
     workspaceId: workspaceId!,
     region: process.env.WAN_REGION || "eu-central-1",
-    model: process.env.WAN_MODEL || "wan3.0-video",
+    model: process.env.WAN_MODEL || DEFAULT_WAN_MODEL,
     maxConcurrentJobs: Number.isFinite(maxConcurrent) && maxConcurrent > 0 ? Math.min(maxConcurrent, 8) : 4,
   };
 }
@@ -93,12 +105,18 @@ function headers(config: WanConfig, async: boolean): Record<string, string> {
 
 type WanErrorBody = { code?: string; message?: string; request_id?: string };
 
-async function parseError(res: Response, fallback: string): Promise<WanApiError> {
+async function parseError(res: Response, fallback: string, model?: string): Promise<WanApiError> {
   let body: WanErrorBody = {};
   try { body = (await res.json()) as WanErrorBody; } catch { /* non-JSON error page */ }
   const message = body.message ?? fallback;
+  // A rejected or unknown model id fails identically on every scene, so the
+  // error has to name the value that has to change.
+  const modelHint =
+    model && /model|InvalidParameter|not.?found|unauthor/i.test(`${body.code ?? ""} ${message}`)
+      ? ` (WAN_MODEL=${model})`
+      : "";
   return new WanApiError(
-    `WAN API ${res.status}: ${message}`.slice(0, 400),
+    `WAN API ${res.status}: ${message}${modelHint}`.slice(0, 400),
     res.status,
     body.code,
     body.request_id,
@@ -160,7 +178,7 @@ export async function createVideoTask(input: WanTaskInput, config = getWanConfig
     signal: AbortSignal.timeout(60_000),
   });
 
-  if (!res.ok) throw await parseError(res, "kunne ikke oprette video-task");
+  if (!res.ok) throw await parseError(res, "kunne ikke oprette video-task", config.model);
 
   const data = (await res.json()) as {
     output?: { task_id?: string; task_status?: string };
@@ -170,7 +188,10 @@ export async function createVideoTask(input: WanTaskInput, config = getWanConfig
   };
 
   if (data.code) {
-    throw new WanApiError(`WAN afviste opgaven: ${data.message ?? data.code}`, 200, data.code, data.request_id);
+    throw new WanApiError(
+      `WAN afviste opgaven: ${data.message ?? data.code} (WAN_MODEL=${config.model})`,
+      200, data.code, data.request_id,
+    );
   }
   const taskId = data.output?.task_id;
   if (!taskId) {

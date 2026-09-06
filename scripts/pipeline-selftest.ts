@@ -17,6 +17,8 @@ import { assertPublicUrl, ipIsPrivate, UnsafeUrlError } from "@/lib/safe-fetch";
 import { extractImageCandidates, normalizeForDedupe } from "@/services/property-import/extract-images";
 import { extractProperty } from "@/services/property-import/extract-property";
 import { readImageInfo } from "@/services/property-import/image-file";
+import { CHOSEN_IMAGE_LIMITS, IMAGE_LIMITS } from "@/services/property-import/download-images";
+import { DEFAULT_WAN_MODEL } from "@/lib/wan/client";
 import { buildStoryboard, distributeDurations, selectImages, type ImageAnalysis } from "@/services/video/ai-director";
 import { buildScenePrompt, PROPERTY_FIDELITY_RULES } from "@/lib/wan/prompt";
 import { VIDEO_STYLE_LIST, resolveVideoStyle } from "@/lib/video-styles";
@@ -100,6 +102,25 @@ check("thumbnail rendition deduplicated against the original",
 check("extraction methods recorded",
   new Set(candidates.map((c) => c.method)).size >= 4,
   [...new Set(candidates.map((c) => c.method))].join(", "));
+
+// ── 3b. Thresholds for photographs the customer already chose ─────────────
+section("Chosen-image thresholds");
+check("lenient floor is below the discovery floor",
+  CHOSEN_IMAGE_LIMITS.minWidth < IMAGE_LIMITS.minWidth &&
+  CHOSEN_IMAGE_LIMITS.minHeight < IMAGE_LIMITS.minHeight,
+  `${CHOSEN_IMAGE_LIMITS.minWidth}x${CHOSEN_IMAGE_LIMITS.minHeight} vs ${IMAGE_LIMITS.minWidth}x${IMAGE_LIMITS.minHeight}`);
+check("a 400x300 listing photo is kept when the customer picked it",
+  400 >= CHOSEN_IMAGE_LIMITS.minWidth && 300 >= CHOSEN_IMAGE_LIMITS.minHeight);
+check("an icon is still rejected",
+  !(64 >= CHOSEN_IMAGE_LIMITS.minWidth && 64 >= CHOSEN_IMAGE_LIMITS.minHeight));
+check("size and byte caps are unchanged",
+  CHOSEN_IMAGE_LIMITS.maxBytes === IMAGE_LIMITS.maxBytes &&
+  CHOSEN_IMAGE_LIMITS.maxDownloads === IMAGE_LIMITS.maxDownloads);
+
+// ── 3c. WAN model id ──────────────────────────────────────────────────────
+section("WAN model");
+check("default model is a real Model Studio image-to-video id",
+  /^wan\d+\.\d+-i2v/.test(DEFAULT_WAN_MODEL), DEFAULT_WAN_MODEL);
 
 // ── 4. Image file validation ──────────────────────────────────────────────
 section("Image validation");

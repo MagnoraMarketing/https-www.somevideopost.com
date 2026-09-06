@@ -7,6 +7,12 @@ import { formatPriceKey } from "@/lib/currency";
 import type { SocialAccount, VideoOrder } from "@/types/database";
 import { DEFAULT_VIDEO_STYLE, type VideoStyleId } from "@/lib/video-styles";
 
+// The page's poll loop calls advanceJob through a Server Action, and a single
+// step can import photographs, poll WAN and re-host a finished clip. Server
+// Actions inherit their page's maxDuration, and the platform default cuts a
+// step off mid-flight.
+export const maxDuration = 60;
+
 export default async function VideoDetailPage({
   params,
 }: {
@@ -56,6 +62,8 @@ export default async function VideoDetailPage({
           videoPrice={formatPriceKey("video", currency)}
           videoStyle={(order as { video_style?: VideoStyleId }).video_style ?? DEFAULT_VIDEO_STYLE}
           initialJobState={(order as { job_state?: string }).job_state ?? "pending"}
+          initialCaption={(order as { caption?: string | null }).caption ?? null}
+          initialCaptionPlatform={(order as { caption_platform?: string | null }).caption_platform ?? null}
         />
       </div>
     </>

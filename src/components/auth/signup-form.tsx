@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 import Link from "next/link";
-import { Check, Sparkles, Gift } from "lucide-react";
+import { Check, Sparkles, Gift, ArrowRight } from "lucide-react";
 import type { AuthFormState } from "@/types/auth";
 import { signUpAction } from "@/services/auth";
 import { LOCALES, LOCALE_FLAGS, LOCALE_LABELS, type Locale } from "@/lib/i18n";
@@ -302,7 +302,18 @@ export function SignupForm() {
         )}
 
         {state?.notice && (
-          <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800">{state.notice}</p>
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-3">
+            <p className="text-sm text-emerald-800">{state.notice}</p>
+            {/* The account exists at this point — the only step left is logging
+                in, so the page has to lead there instead of dead-ending on a
+                form the user has already submitted. */}
+            <Link
+              href={state.loginHref ?? "/login"}
+              className="mt-3 flex items-center justify-center gap-2 rounded-lg border border-emerald-300 bg-white px-4 py-2 text-sm font-semibold text-emerald-800 transition-colors hover:bg-emerald-100"
+            >
+              Gå til login <ArrowRight size={14} />
+            </Link>
+          </div>
         )}
 
         <button

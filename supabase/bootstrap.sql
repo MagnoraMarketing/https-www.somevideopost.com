@@ -530,3 +530,11 @@ alter table property_import_cache enable row level security;
 insert into storage.buckets (id, name, public)
 values ('video-images', 'video-images', true), ('videos', 'videos', true)
 on conflict (id) do nothing;
+
+-- ═══ 013 — stored AI sales text ═══════════════════════════════════════════
+-- The generated caption is kept with its order instead of living only in the
+-- browser. Additive and nullable, like everything above it.
+
+alter table video_orders add column if not exists caption          text;
+alter table video_orders add column if not exists caption_platform text;
+

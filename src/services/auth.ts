@@ -33,20 +33,39 @@ function authErrorMessage(error: { message?: string; status?: number }): string 
   return "Kontoen kunne ikke oprettes. Kontrollér din email og adgangskode, og prøv igen.";
 }
 
+/** Hosts that no confirmation email may ever point at — the link is dead the
+ * moment it leaves the developer's own machine. */
+function isLocalHost(host: string): boolean {
+  const name = host.split(":")[0].toLowerCase();
+  return (
+    name === "localhost" ||
+    name === "127.0.0.1" ||
+    name === "::1" ||
+    name === "0.0.0.0" ||
+    name.endsWith(".local")
+  );
+}
+
+/** The deployment's public base URL, without a trailing slash. */
+function configuredAppUrl(): string {
+  const raw = process.env.NEXT_PUBLIC_APP_URL ?? process.env.APP_URL ?? "https://www.somevideopost.com";
+  return raw.replace(/\/+$/, "");
+}
+
 /**
  * Absolute URL for the confirmation link Supabase emails out.
  *
  * Derived from the request rather than a fixed env var, so a signup on a
  * preview deployment confirms back to that same deployment instead of bouncing
- * the user to production.
+ * the user to production — except when the request came from a local dev
+ * server, where a localhost link is a guaranteed "connection refused" in the
+ * recipient's inbox. Those fall back to the configured public URL.
  */
 async function emailRedirectUrl(): Promise<string> {
   const h = await headers();
   const host = h.get("x-forwarded-host") ?? h.get("host");
-  const proto = h.get("x-forwarded-proto") ?? (host?.startsWith("localhost") ? "http" : "https");
-  const base = host
-    ? `${proto}://${host}`
-    : process.env.NEXT_PUBLIC_APP_URL ?? process.env.APP_URL ?? "https://www.somevideopost.com";
+  const proto = h.get("x-forwarded-proto") ?? "https";
+  const base = host && !isLocalHost(host) ? `${proto}://${host}` : configuredAppUrl();
   return `${base}/auth/callback`;
 }
 
@@ -122,6 +141,9 @@ export async function signUpAction(
         "Din konto er oprettet. Vi har sendt en bekræftelsesmail til " +
         email +
         " — bekræft din adresse, og log derefter ind.",
+      // The form turns this into a visible "Gå til login" button: the account
+      // exists, so the only thing left to do is log in.
+      loginHref: "/login?registered=1",
     };
   }
 
