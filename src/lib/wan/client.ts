@@ -54,15 +54,56 @@ export class WanApiError extends Error {
  */
 export const DEFAULT_WAN_MODEL = "wan2.6-i2v-flash";
 
+/**
+ * The generations whose image-to-video models speak the first-frame request
+ * this client sends. 2.7 exists but moved to another request shape, and there
+ * is no 3.x at all — both are rejected here rather than on every scene.
+ */
+const SUPPORTED_WAN_GENERATIONS = /^wan2\.[1-6]-i2v(-[a-z0-9-]+)?$/;
+
+/** Ids known to work, quoted back to whoever set the wrong one. */
+export const KNOWN_WAN_MODELS = [
+  "wan2.6-i2v-flash",
+  "wan2.6-i2v-plus",
+  "wan2.5-i2v-preview",
+] as const;
+
+/**
+ * Whether this client can speak to `model` at all.
+ *
+ * A model id the API does not know fails identically on every scene, after
+ * the photographs are uploaded and the storyboard is built — an expensive way
+ * to learn that an environment variable holds a value that never existed.
+ */
+export function wanModelSupported(model: string): boolean {
+  return SUPPORTED_WAN_GENERATIONS.test(model.trim());
+}
+
+/**
+ * The model id in force, trimmed — a value pasted into a dashboard field
+ * carries whitespace often enough that it is worth not sending it on.
+ */
+function configuredModel(): string {
+  return process.env.WAN_MODEL?.trim() || DEFAULT_WAN_MODEL;
+}
+
 /** Which variables are set, without revealing any of their values. */
-export function wanConfigStatus(): { ok: boolean; missing: string[]; model: string; region: string } {
+export function wanConfigStatus(): {
+  ok: boolean;
+  missing: string[];
+  model: string;
+  modelSupported: boolean;
+  region: string;
+} {
   const missing: string[] = [];
   if (!process.env.ALIBABA_CLOUD_API_KEY) missing.push("ALIBABA_CLOUD_API_KEY");
   if (!process.env.ALIBABA_WORKSPACE_ID) missing.push("ALIBABA_WORKSPACE_ID");
+  const model = configuredModel();
   return {
     ok: missing.length === 0,
     missing,
-    model: process.env.WAN_MODEL || DEFAULT_WAN_MODEL,
+    model,
+    modelSupported: wanModelSupported(model),
     region: process.env.WAN_REGION || "eu-central-1",
   };
 }
@@ -82,7 +123,7 @@ export function getWanConfig(): WanConfig {
     apiKey: apiKey!,
     workspaceId: workspaceId!,
     region: process.env.WAN_REGION || "eu-central-1",
-    model: process.env.WAN_MODEL || DEFAULT_WAN_MODEL,
+    model: configuredModel(),
     maxConcurrentJobs: Number.isFinite(maxConcurrent) && maxConcurrent > 0 ? Math.min(maxConcurrent, 8) : 4,
   };
 }

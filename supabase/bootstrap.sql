@@ -2,7 +2,7 @@
 -- somevideopost.com — full schema bootstrap
 --
 -- Brings an EMPTY Supabase project up to the current schema in one paste:
--- everything migrations 001–012 do, in order, made safe to run more than once.
+-- everything migrations 001–013 do, in order, made safe to run more than once.
 --
 -- Use this when standing up a new Supabase project (as opposed to applying the
 -- individual migrations in supabase/migrations/, which assume they run exactly

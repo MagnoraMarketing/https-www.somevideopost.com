@@ -41,9 +41,17 @@ export function VideoSalesText({
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  // A text that failed to store looks identical to a stored one until the page
+  // is reloaded and the edit is gone, so say it now.
+  const [saveError, setSaveError] = useState("");
   const [copied, setCopied] = useState(false);
   const variationRef = useRef(0);
   const autoRanRef = useRef(false);
+
+  const save = useCallback(async (text: string, forPlatform: Platform) => {
+    const { error: err } = await saveVideoCaption(orderId, text, forPlatform);
+    setSaveError(err ? "Teksten blev ikke gemt — den er væk, hvis du genindlæser siden." : "");
+  }, [orderId]);
 
   const generate = useCallback(async () => {
     setLoading(true);
@@ -67,13 +75,13 @@ export function VideoSalesText({
       setCaption(text);
       // Persist immediately: a text nobody stored is a text the next visit
       // silently replaces.
-      void saveVideoCaption(orderId, text, platform);
+      void save(text, platform);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Noget gik galt");
     } finally {
       setLoading(false);
     }
-  }, [orderId, platform, title, description, location, bookingUrl, setCaption]);
+  }, [save, platform, title, description, location, bookingUrl, setCaption]);
 
   // Auto-generate a first suggestion once, when there's nothing yet. A caption
   // already stored on the order is never overwritten by a fresh generation.
@@ -133,7 +141,7 @@ export function VideoSalesText({
             onChange={(e) => setCaption(e.target.value)}
             // Edits are stored when the field loses focus — no keystroke-level
             // traffic, but nothing typed here is lost on a reload either.
-            onBlur={() => { if (caption.trim()) void saveVideoCaption(orderId, caption, platform); }}
+            onBlur={() => { if (caption.trim()) void save(caption, platform); }}
             rows={7}
             placeholder={loading ? "AI skriver din salgstekst…" : "Din salgstekst vises her — du kan rette frit."}
             className="w-full resize-y rounded-xl border border-slate-200 px-3.5 py-3 text-sm leading-relaxed text-slate-900 placeholder:text-slate-400 focus:border-[#FF6B4A] focus:outline-none focus:ring-2 focus:ring-[#FF6B4A]/10"
@@ -146,6 +154,7 @@ export function VideoSalesText({
         </div>
 
         {error && <p className="text-xs text-red-500">{error}</p>}
+        {saveError && <p className="text-xs text-amber-600">{saveError}</p>}
 
         <div className="flex items-center justify-between">
           <p className="text-xs text-slate-400">{caption.length} tegn · redigér frit før du deler</p>
