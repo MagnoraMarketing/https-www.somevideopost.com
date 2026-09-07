@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { wanConfigStatus } from "@/lib/wan/client";
+import { KNOWN_WAN_MODELS, wanConfigStatus } from "@/lib/wan/client";
 import { ffmpegAvailable } from "@/services/video/assembler";
 
 // Reaches Supabase to check the credit row and storage bucket.
@@ -41,6 +41,7 @@ export async function GET() {
   let videosBucket: boolean | string = "ukendt";
   let migrationApplied: boolean | string = "ukendt";
   let pipelineTables: boolean | string = "ukendt";
+  let captionColumn: boolean | string = "ukendt";
 
   try {
     const { createAdminClient } = await import("@/lib/supabase/admin");
@@ -57,6 +58,11 @@ export async function GET() {
     const { error: sceneErr } = await admin.from("video_scenes").select("id").limit(1);
     pipelineTables = sceneErr ? `mangler: ${sceneErr.message}` : true;
 
+    // The sales text is saved when the field loses focus, so a missing column
+    // is only visible as a text that quietly comes back different on reload.
+    const { error: captionErr } = await admin.from("video_orders").select("caption").limit(1);
+    captionColumn = captionErr ? `mangler: ${captionErr.message}` : true;
+
     const { data: buckets, error } = await admin.storage.listBuckets();
     if (error) {
       videosBucket = `fejl: ${error.message}`;
@@ -68,6 +74,7 @@ export async function GET() {
     const msg = e instanceof Error ? e.message : String(e);
     creditRow = `fejl: ${msg}`;
     videosBucket = `fejl: ${msg}`;
+    captionColumn = `fejl: ${msg}`;
   }
 
   const blockers: string[] = [];
@@ -94,6 +101,12 @@ export async function GET() {
         "Tjek /api/test/wan.",
     );
   }
+  if (wan.ok && !wan.modelSupported) {
+    blockers.push(
+      `WAN_MODEL=${wan.model} findes ikke i Model Studio — hver eneste scene afvises. ` +
+        `Brug en af: ${KNOWN_WAN_MODELS.join(", ")}.`,
+    );
+  }
   if (!ffmpegAvailable()) {
     blockers.push(
       "Ingen ffmpeg-binær på serveren — den færdige 15-sekunders video kan ikke samles. " +
@@ -106,6 +119,13 @@ export async function GET() {
         "Kør supabase/migrations/20260904_012_property_video_pipeline.sql.",
     );
   }
+  if (captionColumn !== true) {
+    blockers.push(
+      "Migrationen er ikke kørt: video_orders.caption findes ikke i Supabase, " +
+        "så den redigerede salgstekst går tabt ved genindlæsning. " +
+        "Kør supabase/migrations/20260906_013_video_caption.sql.",
+    );
+  }
   if (videosBucket === false) {
     blockers.push(
       "Migrationen er ikke kørt: 'videos'-bucket findes ikke i Supabase. " +
@@ -115,9 +135,15 @@ export async function GET() {
 
   return NextResponse.json({
     env,
-    wan: { configured: wan.ok, missing: wan.missing, model: wan.model, region: wan.region },
+    wan: {
+      configured: wan.ok,
+      missing: wan.missing,
+      model: wan.model,
+      modelSupported: wan.modelSupported,
+      region: wan.region,
+    },
     assembly: { ffmpeg: ffmpegAvailable() },
-    supabase: { creditRow, videosBucket, migrationApplied, pipelineTables },
+    supabase: { creditRow, videosBucket, migrationApplied, pipelineTables, captionColumn },
     blockers,
     ok: blockers.length === 0,
   });

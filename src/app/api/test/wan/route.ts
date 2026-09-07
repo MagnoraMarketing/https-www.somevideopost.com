@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import {
-  createVideoTask, getVideoTask, wanConfigStatus,
+  createVideoTask, getVideoTask, wanConfigStatus, KNOWN_WAN_MODELS,
   WanApiError, WanConfigError,
 } from "@/lib/wan/client";
 import { WAN_CONNECTIVITY_PROMPT, WAN_NEGATIVE_PROMPT } from "@/lib/wan/prompt";
@@ -56,16 +56,24 @@ export async function GET(req: NextRequest) {
   const taskId = req.nextUrl.searchParams.get("taskId");
 
   if (!taskId) {
+    // A model id this client cannot speak fails every scene the same way, so
+    // it is reported here beside the missing variables rather than left for a
+    // generation to discover.
+    const modelHint = !config.modelSupported
+      ? `WAN_MODEL=${config.model} findes ikke i Model Studio — brug ${KNOWN_WAN_MODELS.join(", ")}.`
+      : null;
+
     return NextResponse.json({
-      ok: config.ok,
+      ok: config.ok && config.modelSupported,
       configured: config.ok,
       missing: config.missing,
       model: config.model,
+      modelSupported: config.modelSupported,
       region: config.region,
       endpoint: `https://{ALIBABA_WORKSPACE_ID}.${config.region}.maas.aliyuncs.com/api/v1/services/aigc/video-generation/video-synthesis`,
-      hint: config.ok
-        ? "POST til /api/test/wan for at sende en testgenerering."
-        : `Sæt ${config.missing.join(" og ")} i Vercel.`,
+      hint: !config.ok
+        ? `Sæt ${config.missing.join(" og ")} i Vercel.`
+        : modelHint ?? "POST til /api/test/wan for at sende en testgenerering.",
     });
   }
 

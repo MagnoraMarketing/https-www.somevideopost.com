@@ -18,7 +18,7 @@ import { extractImageCandidates, normalizeForDedupe } from "@/services/property-
 import { extractProperty } from "@/services/property-import/extract-property";
 import { readImageInfo } from "@/services/property-import/image-file";
 import { CHOSEN_IMAGE_LIMITS, IMAGE_LIMITS } from "@/services/property-import/download-images";
-import { DEFAULT_WAN_MODEL } from "@/lib/wan/client";
+import { DEFAULT_WAN_MODEL, KNOWN_WAN_MODELS, wanModelSupported } from "@/lib/wan/client";
 import { buildStoryboard, distributeDurations, selectImages, type ImageAnalysis } from "@/services/video/ai-director";
 import { buildScenePrompt, PROPERTY_FIDELITY_RULES } from "@/lib/wan/prompt";
 import { VIDEO_STYLE_LIST, resolveVideoStyle } from "@/lib/video-styles";
@@ -121,6 +121,16 @@ check("size and byte caps are unchanged",
 section("WAN model");
 check("default model is a real Model Studio image-to-video id",
   /^wan\d+\.\d+-i2v/.test(DEFAULT_WAN_MODEL), DEFAULT_WAN_MODEL);
+check("the default is accepted by the model check", wanModelSupported(DEFAULT_WAN_MODEL));
+check("every quoted id is one the client can speak",
+  KNOWN_WAN_MODELS.every(wanModelSupported), KNOWN_WAN_MODELS.join(", "));
+check("wan3.0-video is rejected — no such generation exists",
+  !wanModelSupported("wan3.0-video"));
+check("wan2.7 is rejected — it speaks a different request shape",
+  !wanModelSupported("wan2.7-i2v-plus"));
+check("a text-to-video id is rejected", !wanModelSupported("wan2.6-t2v-flash"));
+check("surrounding whitespace does not fail a valid id",
+  wanModelSupported(" wan2.6-i2v-flash "));
 
 // ── 4. Image file validation ──────────────────────────────────────────────
 section("Image validation");
