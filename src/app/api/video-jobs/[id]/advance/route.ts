@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { advanceJob } from "@/services/video/job";
+import { advanceWithLease } from "@/services/video/driver";
+import { videoFileRoute } from "@/lib/video-media";
 
 /**
  * Drive one video job forward by a single pipeline step.
@@ -33,7 +34,10 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
   if (!order) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   try {
-    return NextResponse.json(await advanceJob(id));
+    const result = await advanceWithLease(id);
+    // The film itself is only ever reached through the file route, which
+    // checks payment — never as a storage URL in a status response.
+    return NextResponse.json({ ...result, videoUrl: result.videoUrl ? videoFileRoute(id) : undefined });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     console.error(`[video-jobs] advance failed for ${id}: ${message}`);

@@ -2,6 +2,8 @@ import Link from "next/link";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { resolveVideoStyle } from "@/lib/video-styles";
 import type { VideoOrder, VideoScene, VideoSourceImage } from "@/types/database";
+import { resolveVideoUrl } from "@/services/video/media";
+import { summariseVideoOps, type OpsOrder, type OpsScene, type VideoOpsStats } from "@/lib/video-ops-stats";
 
 /**
  * Pipeline debug view.
@@ -46,12 +48,51 @@ async function getData(orderId?: string) {
     admin.from("video_source_images").select("*").eq("order_id", selected).order("position").returns<VideoSourceImage[]>(),
   ]);
 
+  // Privately stored clips and films are opened through signed links.
+  const order = orders?.find((o) => o.id === selected) ?? null;
+  const [finalVideoUrl, clipUrls] = await Promise.all([
+    resolveVideoUrl(order?.final_video_url),
+    Promise.all((scenes ?? []).map((scene) => resolveVideoUrl(scene.clip_url))),
+  ]);
+
   return {
     orders: orders ?? [],
-    order: orders?.find((o) => o.id === selected) ?? null,
-    scenes: scenes ?? [],
+    order,
+    finalVideoUrl,
+    scenes: (scenes ?? []).map((scene, i) => ({ ...scene, clip_url: clipUrls[i] })),
     images: images ?? [],
   };
+}
+
+/** The last 30 days of pipeline activity, for the overview strip. */
+async function getOpsStats(): Promise<VideoOpsStats> {
+  const admin = createAdminClient();
+  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const { data: orders } = await admin
+    .from("video_orders")
+    .select("id, status, job_state, paid, started_at, completed_at, error_message")
+    .gte("created_at", since)
+    .limit(2000)
+    .returns<(OpsOrder & { id: string })[]>();
+  const ids = (orders ?? []).map((o) => o.id);
+  const { data: scenes } = ids.length
+    ? await admin
+        .from("video_scenes")
+        .select("status, attempts, duration_seconds")
+        .in("order_id", ids.slice(0, 500))
+        .returns<OpsScene[]>()
+    : { data: [] as OpsScene[] };
+  return summariseVideoOps(orders ?? [], scenes ?? []);
+}
+
+function Stat({ label, value, hint }: { label: string; value: React.ReactNode; hint?: string }) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">{label}</p>
+      <p className="mt-1 text-lg font-bold text-slate-900">{value}</p>
+      {hint && <p className="text-[11px] text-slate-400">{hint}</p>}
+    </div>
+  );
 }
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
@@ -69,7 +110,10 @@ export default async function AdminVideosPage({
   searchParams: Promise<{ order?: string }>;
 }) {
   const { order: orderParam } = await searchParams;
-  const { orders, order, scenes, images } = await getData(orderParam);
+  const [{ orders, order, finalVideoUrl, scenes, images }, stats] = await Promise.all([
+    getData(orderParam),
+    getOpsStats(),
+  ]);
   const diagnostics = order?.diagnostics ?? {};
   const style = order ? resolveVideoStyle(order.video_style) : null;
 
@@ -79,6 +123,33 @@ export default async function AdminVideosPage({
         <h1 className="text-xl font-bold text-slate-900">Video-pipeline</h1>
         <p className="text-sm text-slate-500">Boligimport, billedvalg, WAN-opgaver og samling.</p>
       </div>
+
+      <section>
+        <h2 className="mb-2 text-sm font-bold text-slate-200">Seneste 30 dage</h2>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">
+          <Stat label="Ordrer" value={stats.total} />
+          <Stat label="Færdige" value={stats.completed} hint={stats.successRate === null ? undefined : `${stats.successRate}% lykkedes`} />
+          <Stat label="Fejlede" value={stats.failed} />
+          <Stat label="I gang" value={stats.processing} hint={stats.awaitingImages ? `${stats.awaitingImages} venter på billeder` : undefined} />
+          <Stat label="Betalt" value={stats.paid} />
+          <Stat label="Behandlingstid" value={stats.medianMinutes === null ? "—" : `${stats.medianMinutes.toFixed(1)} min`} hint="median" />
+          <Stat label="WAN-kald" value={stats.wanSubmissions} hint={`${stats.scenesFailed} scener fejlede`} />
+          <Stat label="Færdige scener" value={`${stats.wanSecondsDelivered.toFixed(0)} s`} hint="genereret footage" />
+        </div>
+        {stats.topErrors.length > 0 && (
+          <div className="mt-3 rounded-xl border border-slate-200 bg-white p-4">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-400">Hyppigste fejl</p>
+            <ul className="space-y-1">
+              {stats.topErrors.map((e) => (
+                <li key={e.message} className="flex gap-3 text-xs">
+                  <span className="w-6 shrink-0 text-right font-semibold text-slate-700">{e.count}×</span>
+                  <span className="text-red-600">{e.message}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </section>
 
       <div className="flex flex-wrap gap-1.5">
         {orders.map((o) => (
@@ -210,10 +281,10 @@ export default async function AdminVideosPage({
             </div>
           </section>
 
-          {order.final_video_url && (
+          {finalVideoUrl && (
             <section className="rounded-2xl border border-slate-200 bg-white p-5 lg:col-span-2">
               <h2 className="mb-3 text-sm font-bold text-slate-900">Færdig video</h2>
-              <video src={order.final_video_url} controls className="w-full max-w-sm rounded-xl" />
+              <video src={finalVideoUrl} controls className="w-full max-w-sm rounded-xl" />
             </section>
           )}
         </div>

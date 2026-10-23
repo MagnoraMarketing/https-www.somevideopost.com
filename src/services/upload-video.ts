@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 const VIDEO_BUCKET = "videos";
 // Guard re-hosting huge files (fetched server-side). ~300 MB is plenty for a
@@ -16,8 +17,10 @@ async function insertReadyOrder(
   userId: string,
   opts: { title: string; videoUrl: string; propertyId: string | null }
 ): Promise<{ orderId?: string; error?: string }> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  // Written by the service role on the signed-in user's behalf (every caller
+  // has already resolved `userId` from the session): customers' own sessions
+  // cannot create an order that is already paid and ready.
+  const { data, error } = await createAdminClient()
     .from("video_orders")
     .insert({
       user_id: userId,

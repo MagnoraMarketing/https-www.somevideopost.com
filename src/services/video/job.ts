@@ -6,9 +6,11 @@ import {
   type ImportDiagnostics, type StoredImage,
 } from "@/services/property-import";
 import { analyzeImages, buildStoryboard, selectImages, type ImageAnalysis, type Storyboard } from "./ai-director";
-import { advanceScenes, createSceneRows, loadScenes, summariseScenes } from "./wan-generator";
+import { advanceScenes, createSceneRows, loadScenes, resetFailedScenes, summariseScenes } from "./wan-generator";
+import { chooseRestartState, type RestartState } from "@/lib/video-job-policy";
 import { assembleVideo, ffmpegAvailable, TRANSITION_SECONDS, type AspectRatio } from "./assembler";
-import { finalVideoPath, storeVideoFile } from "@/services/property-import/store-images";
+import { finalVideoPath } from "@/services/property-import/store-images";
+import { resolveVideoUrl, storeVideoDeliverable } from "./media";
 
 /**
  * Video job orchestration.
@@ -477,11 +479,17 @@ export async function advanceJob(orderId: string): Promise<AdvanceResult> {
       if (!scenes.length) return fail(order, "Ingen færdige klip at samle.");
 
       try {
+        // Clips stored privately are fetched through short-lived signed URLs;
+        // clips from before private delivery are already plain URLs.
+        const clipSources = await Promise.all(scenes.map((s) => resolveVideoUrl(s.clip_url)));
+        if (clipSources.some((source) => !source)) {
+          return fail(order, "Et eller flere klip kunne ikke hentes fra lageret. Prøv igen.");
+        }
         const assembled = await assembleVideo(
-          scenes.map((s) => ({ source: s.clip_url!, durationSeconds: Number(s.duration_seconds) })),
+          scenes.map((s, i) => ({ source: clipSources[i]!, durationSeconds: Number(s.duration_seconds) })),
           { aspectRatio: aspect, transition: style.transition },
         );
-        const url = await storeVideoFile(finalVideoPath(orderId), assembled.buffer);
+        const url = await storeVideoDeliverable(finalVideoPath(orderId), assembled.buffer);
 
         const diagnostics = await mergeDiagnostics(order, {
           assembly: { frames: assembled.frameCount, durationSeconds: assembled.durationSeconds },
@@ -520,6 +528,32 @@ export async function advanceJob(orderId: string): Promise<AdvanceResult> {
         error: order.error_message ?? undefined,
       });
   }
+}
+
+/**
+ * Where a job is, without doing any work.
+ *
+ * Used when another caller currently holds the job's lease: the customer
+ * still gets a truthful progress report, and the step that is already
+ * running is not started a second time.
+ */
+export async function readJobStatus(orderId: string): Promise<AdvanceResult> {
+  const order = await loadOrder(orderId);
+  if (!order) throw new Error(`Video-ordre ${orderId} findes ikke`);
+  const state: JobState = (JOB_STATES as readonly string[]).includes(order.job_state) ? order.job_state : "pending";
+  const terminal = state === "completed" || state === "failed" || state === "awaiting_images";
+  return {
+    ...progressResult(order, state, order.diagnostics ?? {}, {
+      error: order.error_message ?? undefined,
+    }),
+    // Someone else is mid-step; keep polling until it lands.
+    keepPolling: !terminal,
+  };
+}
+
+/** Orders started on the old Google Veo path carry its operation ids. */
+export function isLegacyVeoOrder(order: { video_job_ids?: string[] | null; video_job_id?: string | null }): boolean {
+  return !!(order.video_job_ids?.length || order.video_job_id);
 }
 
 /**
@@ -569,6 +603,30 @@ export async function resumeWithUploadedImages(orderId: string): Promise<void> {
   // The strip on the video page lists order.image_urls; after an upload those
   // are the stored copies, so it shows what the film will actually be made of.
   await syncOrderImageUrls(orderId, await loadStoredImages(orderId));
+}
+
+/**
+ * Put a failed or stalled job back into the pipeline at the latest point
+ * that reuses what it already has (see chooseRestartState). Returns the state
+ * it resumed from.
+ */
+export async function restartFromBestPoint(orderId: string): Promise<RestartState> {
+  const [scenes, images] = await Promise.all([loadScenes(orderId), loadStoredImages(orderId)]);
+  const state = chooseRestartState({
+    sceneStatuses: scenes.map((s) => s.status),
+    storedImageCount: images.length,
+  });
+  if (state === "generating_clips") await resetFailedScenes(orderId);
+
+  await patchOrder(orderId, {
+    job_state: state,
+    status: "processing",
+    error_message: null,
+    // A restarted job gets a fresh clock, or the stale check fails it at once.
+    started_at: new Date().toISOString(),
+  });
+  console.info(`${LOG} order ${orderId} restarted from ${state}`);
+  return state;
 }
 
 export function transitionSecondsFor(styleId: VideoStyleId): number {

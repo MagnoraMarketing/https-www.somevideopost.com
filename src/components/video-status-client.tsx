@@ -2,13 +2,17 @@
 
 import Link from "next/link";
 import { useState, useEffect, useCallback, useTransition, useRef } from "react";
-import { CheckCircle2, Loader2, XCircle, Download, Share2, Send, Lock } from "lucide-react";
+import { CheckCircle2, Loader2, XCircle, Download, Share2, Send, Lock, RefreshCw } from "lucide-react";
 import { pollVideoJob } from "@/services/video-jobs";
 import { JobProgress, type SceneView, type JobDiagnosticsView } from "@/components/video/job-progress";
 import { DEFAULT_VIDEO_STYLE, type VideoStyleId } from "@/lib/video-styles";
 import { shareVideoToSocial } from "@/services/share-video";
 import { createVideoPaymentCheckout } from "@/services/billing";
 import { VideoSalesText } from "@/components/video-sales-text";
+import { EmbedPanel } from "@/components/video/embed-panel";
+import { restartVideoOrder } from "@/services/video-orders";
+import { videoFileRoute, videoPreviewRoute } from "@/lib/video-media";
+import type { SharingState } from "@/services/video-sharing";
 import type { SocialAccount } from "@/types/database";
 
 function PaymentPanel({ orderId, videoPrice, nearlyReady }: { orderId: string; videoPrice: string; nearlyReady?: boolean }) {
@@ -65,9 +69,12 @@ type Props = {
   /** Sales text stored on the order, if it has one. */
   initialCaption?: string | null;
   initialCaptionPlatform?: string | null;
+  /** Why the job failed, as stored on the order. */
+  initialError?: string | null;
+  initialSharing: SharingState;
 };
 
-function SharePanel({ videoUrl, accounts, caption, setCaption }: { videoUrl: string; accounts: SocialAccount[]; caption: string; setCaption: (v: string) => void }) {
+function SharePanel({ orderId, accounts, caption, setCaption }: { orderId: string; accounts: SocialAccount[]; caption: string; setCaption: (v: string) => void }) {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
   const [scheduledAt, setScheduledAt] = useState("");
@@ -82,7 +89,8 @@ function SharePanel({ videoUrl, accounts, caption, setCaption }: { videoUrl: str
   function handleShare() {
     const fd = new FormData();
     fd.append("content", caption);
-    fd.append("video_url", videoUrl);
+    // The server resolves a link Facebook/Instagram can fetch for this order.
+    fd.append("order_id", orderId);
     fd.append("scheduled_at", scheduledAt);
     selected.forEach((id) => fd.append("account_ids[]", id));
     startTransition(async () => {
@@ -196,7 +204,7 @@ function SharePanel({ videoUrl, accounts, caption, setCaption }: { videoUrl: str
   );
 }
 
-export function VideoStatusClient({ orderId, initialStatus, initialVideoUrl, initialVideoUrls, title, description, location, bookingUrl, imageUrls, accounts, initialPaid, videoPrice, videoStyle, initialJobState, initialCaption, initialCaptionPlatform }: Props) {
+export function VideoStatusClient({ orderId, initialStatus, initialVideoUrl, initialVideoUrls, title, description, location, bookingUrl, imageUrls, accounts, initialPaid, videoPrice, videoStyle, initialJobState, initialCaption, initialCaptionPlatform, initialError, initialSharing }: Props) {
   const paid = initialPaid;
   const [status, setStatus] = useState<Status>(initialStatus);
   const [videoUrl, setVideoUrl] = useState<string | undefined>(initialVideoUrl);
@@ -205,7 +213,9 @@ export function VideoStatusClient({ orderId, initialStatus, initialVideoUrl, ini
   const [jobState, setJobState] = useState<string>(initialJobState);
   const [jobLabel, setJobLabel] = useState("Klargør din video…");
   const [jobProgress, setJobProgress] = useState(2);
-  const [jobError, setJobError] = useState<string | undefined>(undefined);
+  const [jobError, setJobError] = useState<string | undefined>(initialError ?? undefined);
+  const [restarting, setRestarting] = useState(false);
+  const [previewFailed, setPreviewFailed] = useState(false);
   const [diagnostics, setDiagnostics] = useState<JobDiagnosticsView>({});
   const [scenes, setScenes] = useState<SceneView[]>([]);
   const [style, setStyle] = useState<VideoStyleId>(videoStyle ?? DEFAULT_VIDEO_STYLE);
@@ -258,9 +268,22 @@ export function VideoStatusClient({ orderId, initialStatus, initialVideoUrl, ini
             </div>
           </div>
 
-          {/* Watermarked, non-downloadable preview */}
+          {/* A low-resolution, blurred render — the real film is only served after payment. */}
           <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-black shadow-lg">
-            <video src={clips[0]} autoPlay loop muted playsInline className="w-full blur-[2px]" style={{ maxHeight: "480px" }} />
+            {previewFailed ? (
+              <div className="aspect-video w-full" />
+            ) : (
+              <video
+                src={videoPreviewRoute(orderId)}
+                autoPlay
+                loop
+                muted
+                playsInline
+                onError={() => setPreviewFailed(true)}
+                className="w-full"
+                style={{ maxHeight: "480px" }}
+              />
+            )}
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/30">
               <Lock size={30} className="text-white/90" />
               <span className="rounded-full bg-black/50 px-3 py-1 text-xs font-semibold text-white backdrop-blur-sm">Forhåndsvisning · lås op med betaling</span>
@@ -309,13 +332,10 @@ export function VideoStatusClient({ orderId, initialStatus, initialVideoUrl, ini
               </p>
             )}
             <div className="rounded-2xl overflow-hidden border border-slate-200 bg-black shadow-lg">
-              <video src={url} controls autoPlay={i === 0} loop className="w-full" style={{ maxHeight: "480px" }} />
+              <video src={url} controls autoPlay={i === 0} loop playsInline className="w-full" style={{ maxHeight: "480px" }} />
             </div>
             <a
-              href={url}
-              download={`${title}-klip-${i + 1}.mp4`}
-              target="_blank"
-              rel="noopener noreferrer"
+              href={videoFileRoute(orderId, { clip: i, download: true })}
               className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
             >
               <Download size={13} /> Download klip {i + 1}
@@ -335,19 +355,43 @@ export function VideoStatusClient({ orderId, initialStatus, initialVideoUrl, ini
           setCaption={setCaption}
         />
 
-        <SharePanel videoUrl={videoUrl} accounts={accounts} caption={caption} setCaption={setCaption} />
+        <SharePanel orderId={orderId} accounts={accounts} caption={caption} setCaption={setCaption} />
+
+        <EmbedPanel orderId={orderId} initial={initialSharing} />
       </div>
     );
   }
 
   if (status === "failed") {
+    const retry = async () => {
+      setRestarting(true);
+      const res = await restartVideoOrder(orderId);
+      setRestarting(false);
+      if (res.error) { setJobError(res.error); return; }
+      setJobError(undefined);
+      setStatus("processing");
+    };
+
     return (
-      <div className="flex items-center gap-3 rounded-2xl border border-red-200 bg-red-50 px-5 py-4">
-        <XCircle size={20} className="text-red-500 shrink-0" />
-        <div>
-          <p className="font-semibold text-red-900">Video generering fejlede</p>
-          <p className="text-sm text-red-700">Prøv igen eller kontakt support.</p>
+      <div className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4">
+        <div className="flex items-start gap-3">
+          <XCircle size={20} className="mt-0.5 text-red-500 shrink-0" />
+          <div>
+            <p className="font-semibold text-red-900">Videoen kunne ikke laves</p>
+            <p className="text-sm text-red-700">
+              {jobError ?? "Noget gik galt undervejs."} Prøv igen — de dele, der allerede er lavet, genbruges.
+            </p>
+          </div>
         </div>
+        <button
+          type="button"
+          onClick={retry}
+          disabled={restarting}
+          className="mt-4 inline-flex items-center gap-2 rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-semibold text-red-800 transition-colors hover:bg-red-50 disabled:opacity-50"
+        >
+          {restarting ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
+          {restarting ? "Starter igen…" : "Prøv igen"}
+        </button>
       </div>
     );
   }

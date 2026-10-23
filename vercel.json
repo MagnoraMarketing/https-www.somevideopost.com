@@ -3,5 +3,11 @@
     "src/app/api/scrape-url/route.ts": {
       "memory": 1024
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/video-jobs",
+      "schedule": "17 4 * * *"
+    }
+  ]
 }

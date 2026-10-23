@@ -5,7 +5,8 @@ import {
   WanApiError, WanConfigError,
 } from "@/lib/wan/client";
 import { WAN_NEGATIVE_PROMPT } from "@/lib/wan/prompt";
-import { sceneClipPath, storeVideoFile } from "@/services/property-import/store-images";
+import { sceneClipPath } from "@/services/property-import/store-images";
+import { storeVideoDeliverable } from "./media";
 import type { AspectRatio } from "./assembler";
 import type { Storyboard } from "./ai-director";
 
@@ -167,7 +168,7 @@ async function pollScene(scene: SceneRow): Promise<void> {
 
     const buffer = await downloadWanClip(status.videoUrl);
     const path = sceneClipPath(scene.order_id, scene.scene_index, scene.attempts);
-    const clipUrl = await storeVideoFile(path, buffer);
+    const clipUrl = await storeVideoDeliverable(path, buffer);
     console.info(`${LOG} completed scene ${scene.scene_index} (${(buffer.byteLength / 1024).toFixed(0)} KB)`);
     await updateScene(scene.id, {
       status: "succeeded",
@@ -233,11 +234,16 @@ export async function advanceScenes(orderId: string, aspect: AspectRatio): Promi
   return summariseScenes(await loadScenes(orderId));
 }
 
-/** Re-queue one failed scene without touching the rest of the film. */
+/**
+ * Re-queue one failed scene without touching the rest of the film.
+ *
+ * Only a failed scene qualifies: re-running one that succeeded would pay for
+ * a WAN generation the film already has.
+ */
 export async function retryScene(orderId: string, sceneIndex: number): Promise<boolean> {
   const scenes = await loadScenes(orderId);
   const scene = scenes.find((s) => s.scene_index === sceneIndex);
-  if (!scene) return false;
+  if (!scene || scene.status !== "failed") return false;
   await updateScene(scene.id, {
     status: "pending",
     wan_task_id: null,
@@ -246,4 +252,19 @@ export async function retryScene(orderId: string, sceneIndex: number): Promise<b
     error_message: null,
   });
   return true;
+}
+
+/**
+ * Give every permanently failed scene a fresh attempt budget, leaving the
+ * scenes that succeeded — and were paid for — exactly as they are.
+ */
+export async function resetFailedScenes(orderId: string): Promise<number> {
+  const { data, error } = await createAdminClient()
+    .from("video_scenes")
+    .update({ status: "pending", wan_task_id: null, attempts: 0, error_message: null })
+    .eq("order_id", orderId)
+    .eq("status", "failed")
+    .select("id");
+  if (error) throw new Error(`Kunne ikke nulstille scener: ${error.message}`);
+  return (data ?? []).length;
 }

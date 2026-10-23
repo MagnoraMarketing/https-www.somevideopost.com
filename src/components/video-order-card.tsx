@@ -99,7 +99,7 @@ function ProgressSection({
           {status === "failed" ? "Video generering fejlede." : `Genereringen tager for lang tid (${mins} min).`}
         </p>
         <p className="mt-1 text-xs text-red-700">
-          Klik på &ldquo;Genstart&rdquo; for at starte en ny generering med Google AI.
+          Klik på &ldquo;Genstart&rdquo; for at prøve igen — de dele, der allerede er lavet, genbruges.
         </p>
         <div className="mt-3 flex gap-2">
           <button
@@ -220,11 +220,10 @@ export function VideoOrderCard({ order }: { order: Order }) {
 
       {order.status === "ready" && order.video_url && order.paid && (
         <div className="mt-4">
-          <video src={order.video_url} controls className="w-full max-w-sm rounded-lg border border-slate-100" />
+          <video src={order.video_url} controls playsInline preload="metadata" className="w-full max-w-sm rounded-lg border border-slate-100" />
           <div className="mt-3 flex gap-3">
             <a
-              href={order.video_url}
-              download
+              href={`${order.video_url}?download=1`}
               className="inline-flex items-center gap-2 rounded-lg bg-[#1B3F7A] px-4 py-2 text-sm font-medium text-white hover:bg-[#152f5c]"
             >
               <Download size={13} /> Download video
