@@ -312,3 +312,37 @@ export async function assembleVideo(
     await rm(dir, { recursive: true, force: true }).catch(() => {});
   }
 }
+
+/**
+ * The locked preview shown before the per-video payment.
+ *
+ * A small, heavily blurred, silent copy of the film: enough to see the
+ * motion, the rooms and the pacing, useless as a finished video. Until now the
+ * locked preview played the real file with a CSS blur on top, so the full
+ * film was one "Save video as…" away without paying.
+ */
+export async function renderLockedPreview(source: string): Promise<Buffer> {
+  const ffmpeg = resolveFfmpegPath();
+  const dir = await mkdtemp(join(tmpdir(), "svp-preview-"));
+  try {
+    const input = join(dir, "source.mp4");
+    const output = join(dir, "preview.mp4");
+    await fetchToFile(source, input);
+    await run(ffmpeg, [
+      "-y", "-hide_banner", "-loglevel", "error",
+      "-i", input,
+      // 320 px on the short side, then blurred twice over: rooms stay
+      // recognisable, details and text do not.
+      "-vf", "scale='if(gt(iw,ih),-2,320)':'if(gt(iw,ih),320,-2)',boxblur=10:2,fps=24",
+      "-an",
+      "-t", String(TARGET_DURATION_SECONDS),
+      "-c:v", "libx264", "-preset", "veryfast", "-crf", "32",
+      "-pix_fmt", "yuv420p",
+      "-movflags", "+faststart",
+      output,
+    ], 50_000);
+    return await readFile(output);
+  } finally {
+    await rm(dir, { recursive: true, force: true }).catch(() => {});
+  }
+}

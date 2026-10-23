@@ -5,10 +5,15 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { DEFAULT_VIDEO_STYLE, isVideoStyleId, type VideoStyleId } from "@/lib/video-styles";
-import { advanceJob, type AdvanceResult, type JobState } from "@/services/video/job";
+import { restartFromBestPoint, type AdvanceResult, type JobState } from "@/services/video/job";
+import { advanceWithLease } from "@/services/video/driver";
+import {
+  checkOrderLimits, findDuplicateOrder, normaliseSourceUrl, orderLimits, type RecentOrder,
+} from "@/lib/video-job-policy";
 import { adoptChosenImages } from "@/services/property-import";
 import type { AspectRatio } from "@/services/video/assembler";
 import { loadScenes } from "@/services/video/wan-generator";
+import { videoFileRoute } from "@/lib/video-media";
 
 /**
  * Server actions for the property-video pipeline.
@@ -16,6 +21,9 @@ import { loadScenes } from "@/services/video/wan-generator";
  * Creating an order does the minimum — record the choice and hand off to the
  * job state machine — so no request has to wait on scraping, AI or WAN.
  */
+
+/** More than the AI Director will ever use; anything beyond is noise. */
+const MAX_FORM_IMAGES = 30;
 
 function parseAspect(value: unknown): AspectRatio {
   return value === "1:1" || value === "16:9" ? value : "9:16";
@@ -36,8 +44,36 @@ export async function createPropertyVideoOrder(formData: FormData): Promise<void
   const aspectRatio = parseAspect(formData.get("aspect_ratio"));
   const propertyId = String(formData.get("property_id") ?? "") || null;
 
-  const sourceUrl = String(formData.get("source_url") ?? formData.get("booking_url") ?? "").trim() || null;
-  const imageUrls = formData.getAll("image_urls[]").map(String).filter((u) => u.startsWith("http"));
+  const normalisedUrl = normaliseSourceUrl(String(formData.get("source_url") ?? formData.get("booking_url") ?? ""));
+  if (normalisedUrl === "invalid") redirect("/videos?error=url");
+  const sourceUrl = normalisedUrl;
+  const imageUrls = formData
+    .getAll("image_urls[]")
+    .map(String)
+    .filter((u) => /^https?:\/\//i.test(u) && u.length <= 2048)
+    .slice(0, MAX_FORM_IMAGES);
+
+  // Duplicate protection and cost control. WAN generation is paid for before
+  // the customer pays for the video, so a double click must not start two
+  // films and one account must not be able to queue up dozens at once.
+  const limits = orderLimits();
+  const { data: recentRows } = await createAdminClient()
+    .from("video_orders")
+    .select("id, status, job_state, source_url, title, created_at")
+    .eq("user_id", user.id)
+    .gte("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+    .order("created_at", { ascending: false })
+    .limit(100)
+    .returns<RecentOrder[]>();
+  // Uploaded finished videos are stored as ready orders that never ran the
+  // pipeline; they cost nothing to generate and do not count.
+  const recent = (recentRows ?? []).filter((o) => !(o.status === "ready" && o.job_state === "pending"));
+
+  const duplicate = findDuplicateOrder(recent, { source_url: sourceUrl, title }, limits);
+  if (duplicate) redirect(`/videos/${duplicate.id}`);
+
+  const verdict = checkOrderLimits(recent, limits);
+  if (!verdict.ok) redirect(`/videos?error=${verdict.reason}`);
 
   const { data: order, error } = await supabase
     .from("video_orders")
@@ -88,9 +124,10 @@ export async function createPropertyVideoOrder(formData: FormData): Promise<void
   }
 
   // First step runs inline so the customer lands on a page that is already
-  // moving; everything after this is driven by the client's poll loop.
+  // moving; after this the video page, the list and the scheduled driver all
+  // move it along through the same leased driver.
   try {
-    await advanceJob(order.id);
+    await advanceWithLease(order.id);
   } catch (e) {
     console.error("[video-jobs] first step failed:", e instanceof Error ? e.message : String(e));
   }
@@ -128,17 +165,20 @@ export async function pollVideoJob(orderId: string): Promise<JobStatusView | { e
   if (!order) return { error: "Ordren findes ikke" };
 
   try {
-    const result = await advanceJob(orderId);
+    const result = await advanceWithLease(orderId);
     const scenes = await loadScenes(orderId);
     return {
       ...result,
+      // Never the storage URL itself: the page plays the film through the
+      // file route, which checks payment before handing anything out.
+      videoUrl: result.videoUrl ? videoFileRoute(orderId) : undefined,
       videoStyle: order.video_style ?? DEFAULT_VIDEO_STYLE,
       scenes: scenes.map((s) => ({
         index: s.scene_index,
         status: s.status,
         attempts: s.attempts,
         purpose: s.purpose,
-        clipUrl: s.clip_url,
+        clipUrl: null,
         error: s.error_message,
       })),
     };
@@ -191,8 +231,13 @@ export async function retryImageImport(orderId: string): Promise<{ error?: strin
   return restartVideoJob(orderId, "pending");
 }
 
-/** Put a stalled or failed job back into the pipeline from the top. */
-export async function restartVideoJob(orderId: string, from: JobState = "pending"): Promise<{ error?: string }> {
+/**
+ * Put a stalled or failed job back into the pipeline.
+ *
+ * Without an explicit `from` it resumes at the latest point that reuses what
+ * the job already has — finished scenes are never paid for twice.
+ */
+export async function restartVideoJob(orderId: string, from?: JobState): Promise<{ error?: string }> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Ikke logget ind" };
@@ -205,11 +250,16 @@ export async function restartVideoJob(orderId: string, from: JobState = "pending
     .maybeSingle<{ id: string }>();
   if (!order) return { error: "Ordren findes ikke" };
 
-  await createAdminClient()
-    .from("video_orders")
-    .update({ job_state: from, status: "processing", error_message: null })
-    .eq("id", orderId);
+  if (from) {
+    await createAdminClient()
+      .from("video_orders")
+      .update({ job_state: from, status: "processing", error_message: null, started_at: new Date().toISOString() })
+      .eq("id", orderId);
+  } else {
+    await restartFromBestPoint(orderId);
+  }
 
   revalidatePath(`/videos/${orderId}`);
+  revalidatePath("/videos");
   return {};
 }

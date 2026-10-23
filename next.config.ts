@@ -7,7 +7,16 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     // The final render spawns the binary, which the bundler cannot see as a
     // dependency; without this the assembly step has nothing to execute.
+    // Every route that can run a job step or render a preview needs it: the
+    // video page (its Server Action drives the job), the list and cron
+    // drivers, and the preview route. Listed explicitly rather than relying on
+    // the tracer to find the runtime `require` on its own.
     "/api/video-jobs/**": ["./node_modules/ffmpeg-static/ffmpeg"],
+    "/api/cron/video-jobs": ["./node_modules/ffmpeg-static/ffmpeg"],
+    "/api/poll-video-status": ["./node_modules/ffmpeg-static/ffmpeg"],
+    "/api/videos/**": ["./node_modules/ffmpeg-static/ffmpeg"],
+    "/videos/\\[id\\]": ["./node_modules/ffmpeg-static/ffmpeg"],
+    "/videos/new": ["./node_modules/ffmpeg-static/ffmpeg"],
   },
   async redirects() {
     // Locale-prefixed auth routes don't exist — the auth pages live at the

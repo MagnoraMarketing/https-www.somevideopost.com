@@ -153,6 +153,7 @@ export function NewVideoForm() {
 
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [videoStyle, setVideoStyle] = useState<VideoStyleId>(DEFAULT_VIDEO_STYLE);
@@ -193,20 +194,27 @@ export function NewVideoForm() {
     const files = Array.from(e.target.files ?? []);
     if (!files.length) return;
     setUploading(true);
-    const urls = await Promise.all(
+    setUploadError("");
+    // A file the server refuses is reported, not shown: a local preview of an
+    // image that never reached storage would silently vanish from the video.
+    const results = await Promise.all(
       files.map(async (file) => {
         const fd = new FormData();
         fd.append("file", file);
-        const res = await fetch("/api/upload-image", { method: "POST", body: fd });
-        if (res.ok) { const { url } = await res.json(); return url as string; }
-        return await new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.readAsDataURL(file);
-        });
+        try {
+          const res = await fetch("/api/upload-image", { method: "POST", body: fd });
+          if (res.ok) { const { url } = await res.json(); return { url: url as string }; }
+          const { error } = await res.json().catch(() => ({ error: "" }));
+          return { failed: `${file.name}: ${error || "kunne ikke uploades"}` };
+        } catch {
+          return { failed: `${file.name}: kunne ikke uploades` };
+        }
       })
     );
+    const urls = results.flatMap((r) => ("url" in r && r.url ? [r.url] : []));
+    const failures = results.flatMap((r) => ("failed" in r && r.failed ? [r.failed] : []));
     setImageUrls((prev) => [...prev, ...urls]);
+    if (failures.length) setUploadError(failures.join(" · "));
     setUploading(false);
     if (e.target) e.target.value = "";
   }
@@ -417,7 +425,8 @@ export function NewVideoForm() {
                       <span>{uploading ? "Uploader billeder..." : "Klik for at tilføje billeder til din fotorute"}</span>
                     </button>
                   )}
-                  <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFileChange} />
+                  {uploadError && <p className="mt-2 text-xs text-red-500">{uploadError}</p>}
+                  <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" multiple className="hidden" onChange={handleFileChange} />
                 </div>
 
                 {/* 5. Submit */}

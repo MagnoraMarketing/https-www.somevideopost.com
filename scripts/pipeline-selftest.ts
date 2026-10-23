@@ -24,6 +24,20 @@ import { buildScenePrompt, PROPERTY_FIDELITY_RULES } from "@/lib/wan/prompt";
 import { VIDEO_STYLE_LIST, resolveVideoStyle } from "@/lib/video-styles";
 import { framesForScenes, ffmpegAvailable, assembleVideo, TARGET_FRAMES } from "@/services/video/assembler";
 import type { StoredImage } from "@/services/property-import";
+import {
+  aspectPaddingPercent, buildEmbedCode, embedUrl, generateShareToken, isShareToken,
+  orderMediaList, parseStorageRef, publicBaseUrl, toStorageRef, videoFileRoute,
+} from "@/lib/video-media";
+import {
+  checkOrderLimits, chooseRestartState, findDuplicateOrder, normaliseSourceUrl, orderLimits,
+  type RecentOrder,
+} from "@/lib/video-job-policy";
+import { summariseVideoOps } from "@/lib/video-ops-stats";
+import { isStale, STALE_AFTER_HOURS } from "@/services/video/driver";
+import { renderLockedPreview } from "@/services/video/assembler";
+import { execFileSync } from "child_process";
+import { mkdtempSync, writeFileSync, rmSync } from "fs";
+import { tmpdir } from "os";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -244,6 +258,138 @@ if (!ffmpegAvailable()) {
       check(`${aspect}: exactly ${TARGET_FRAMES} frames`, rendered.frameCount === TARGET_FRAMES, `${rendered.frameCount}`);
       check(`${aspect}: exactly 15.000 seconds`, Math.abs(rendered.durationSeconds - 15) < 0.001, `${rendered.durationSeconds.toFixed(3)}s`);
     }
+  }
+}
+
+// ── 8. Private delivery ───────────────────────────────────────────────────
+section("Private delivery");
+const ref = toStorageRef("video-private", "properties/abc/video/final/x.mp4");
+check("storage ref round-trips", JSON.stringify(parseStorageRef(ref)) === JSON.stringify({ bucket: "video-private", path: "properties/abc/video/final/x.mp4" }), ref);
+check("plain URL is not a storage ref", parseStorageRef("https://x.supabase.co/storage/v1/object/public/videos/a.mp4") === null);
+check("ref climbing out of its folder is refused", parseStorageRef("storage://video-private/properties/../../etc") === null);
+check("ref without a path is refused", parseStorageRef("storage://video-private/") === null);
+check("media list puts the film first and drops duplicates",
+  JSON.stringify(orderMediaList({ final_video_url: "F", video_url: "F", video_urls: ["F", "c1", "c2", ""] })) === JSON.stringify(["F", "c1", "c2"]));
+check("legacy order without final_video_url still lists its video",
+  JSON.stringify(orderMediaList({ video_url: "https://old/v.mp4", video_urls: null })) === JSON.stringify(["https://old/v.mp4"]));
+check("file route for the film", videoFileRoute("o1") === "/api/videos/o1/file");
+check("file route for a clip download", videoFileRoute("o1", { clip: 2, download: true }) === "/api/videos/o1/file?clip=2&download=1");
+
+// ── 9. Sharing & embed ────────────────────────────────────────────────────
+section("Sharing & embed");
+const tokenA = generateShareToken();
+const tokenB = generateShareToken();
+check("share token is URL-safe and long", isShareToken(tokenA) && tokenA.length >= 32, `${tokenA.length} chars`);
+check("share tokens are unique", tokenA !== tokenB);
+check("malformed token rejected", !isShareToken("../etc/passwd") && !isShareToken("short"));
+check("base URL comes from NEXT_PUBLIC_APP_URL without trailing slash",
+  publicBaseUrl({ NEXT_PUBLIC_APP_URL: "https://www.somevideopost.com/" }) === "https://www.somevideopost.com");
+check("embed URL is the real route", embedUrl("tok", "https://www.somevideopost.com") === "https://www.somevideopost.com/embed/tok");
+check("16:9 / 1:1 / 9:16 aspect padding",
+  aspectPaddingPercent("16:9") === 56.25 && aspectPaddingPercent("1:1") === 100 && aspectPaddingPercent("9:16") > 177);
+const code = buildEmbedCode({ token: tokenA, aspect: "9:16", title: `Villa "Sol" <script>`, baseUrl: "https://www.somevideopost.com" });
+check("embed code points at the embed route", code.includes(`src="https://www.somevideopost.com/embed/${tokenA}"`));
+check("embed code escapes the title", !code.includes("<script>") && code.includes("&quot;Sol&quot;"));
+check("embed code keeps the portrait ratio", code.includes("padding-bottom:177.78%") && code.includes("max-width:360px"));
+check("embed code allows fullscreen", code.includes("allowfullscreen"));
+
+// ── 10. Job policy ────────────────────────────────────────────────────────
+section("Job policy");
+check("restart: all scenes done → only re-render",
+  chooseRestartState({ sceneStatuses: ["succeeded", "succeeded"], storedImageCount: 6 }) === "assembling_video");
+check("restart: some scenes failed → regenerate only those",
+  chooseRestartState({ sceneStatuses: ["succeeded", "failed", "succeeded"], storedImageCount: 6 }) === "generating_clips");
+check("restart: no scenes, photos stored → reuse photos",
+  chooseRestartState({ sceneStatuses: [], storedImageCount: 4 }) === "analyzing_images");
+check("restart: nothing yet → from the listing",
+  chooseRestartState({ sceneStatuses: [], storedImageCount: 0 }) === "pending");
+
+const limits = orderLimits({});
+check("default limits: 3 active, 10 per day", limits.maxActive === 3 && limits.maxPerDay === 10);
+check("limits read from env", orderLimits({ VIDEO_MAX_ACTIVE_JOBS_PER_USER: "5", VIDEO_MAX_ORDERS_PER_DAY: "x" }).maxActive === 5
+  && orderLimits({ VIDEO_MAX_ORDERS_PER_DAY: "x" }).maxPerDay === 10);
+const now = Date.parse("2026-10-23T12:00:00Z");
+const ago = (s: number) => new Date(now - s * 1000).toISOString();
+const recent: RecentOrder[] = [
+  { id: "a", status: "processing", job_state: "generating_clips", source_url: "https://airbnb.com/rooms/1", title: "A", created_at: ago(30) },
+  { id: "b", status: "processing", job_state: "awaiting_images", source_url: null, title: "B", created_at: ago(600) },
+  { id: "c", status: "ready", job_state: "completed", source_url: null, title: "C", created_at: ago(3600) },
+];
+check("same listing within two minutes is a duplicate",
+  findDuplicateOrder(recent, { source_url: "HTTPS://airbnb.com/rooms/1 ", title: "Other" }, limits, now)?.id === "a");
+check("same listing after the window is a new order",
+  findDuplicateOrder(recent, { source_url: "https://airbnb.com/rooms/1", title: null }, limits, now + 300_000) === null);
+check("different listing is not a duplicate",
+  findDuplicateOrder(recent, { source_url: "https://airbnb.com/rooms/2", title: "A" }, limits, now) === null);
+check("a job waiting for photos does not count as active", checkOrderLimits(recent, limits, now).ok);
+const busy = [...recent, ...[1, 2].map((i) => ({ id: `p${i}`, status: "processing", job_state: "pending", source_url: null, title: `P${i}`, created_at: ago(60) }))];
+const busyVerdict = checkOrderLimits(busy, limits, now);
+check("fourth active job is refused", !busyVerdict.ok && busyVerdict.reason === "busy");
+const many = Array.from({ length: 10 }, (_, i) => ({ id: `d${i}`, status: "ready", job_state: "completed", source_url: null, title: `D${i}`, created_at: ago(3600 * (i + 1)) }));
+const dailyVerdict = checkOrderLimits(many, limits, now);
+check("eleventh order in 24h is refused", !dailyVerdict.ok && dailyVerdict.reason === "daily");
+check("orders older than a day do not count", checkOrderLimits(many.map((o) => ({ ...o, created_at: ago(90_000) })), limits, now).ok);
+check("listing URL normalised", normaliseSourceUrl(" https://www.airbnb.dk/rooms/123 ") === "https://www.airbnb.dk/rooms/123");
+check("empty listing URL is fine", normaliseSourceUrl("") === null);
+for (const bad of ["javascript:alert(1)", "ftp://x.com", "not a url", "https://user:pw@x.com/"]) {
+  check(`listing URL rejected: ${bad}`, normaliseSourceUrl(bad) === "invalid");
+}
+check(`job older than ${STALE_AFTER_HOURS}h is stale`, isStale({ created_at: ago(STALE_AFTER_HOURS * 3600 + 60) }, now));
+check("restarted job uses its new start time", !isStale({ created_at: ago(48 * 3600), started_at: ago(60) }, now));
+
+// ── 11. Admin overview ────────────────────────────────────────────────────
+section("Admin overview");
+const stats = summariseVideoOps(
+  [
+    { status: "ready", job_state: "completed", paid: true, started_at: ago(900), completed_at: ago(300), error_message: null },
+    { status: "ready", job_state: "completed", paid: false, started_at: ago(1500), completed_at: ago(300), error_message: null },
+    { status: "failed", job_state: "failed", paid: false, started_at: ago(900), completed_at: null, error_message: "Ingen scener kunne genereres. Prøv igen" },
+    { status: "failed", job_state: "failed", paid: false, started_at: null, completed_at: null, error_message: "Ingen scener kunne genereres. Prøv igen" },
+    { status: "processing", job_state: "awaiting_images", paid: false, started_at: null, completed_at: null, error_message: null },
+  ],
+  [
+    { status: "succeeded", attempts: 1, duration_seconds: "2.5" },
+    { status: "succeeded", attempts: 2, duration_seconds: 2.5 },
+    { status: "failed", attempts: 3, duration_seconds: 2 },
+  ],
+);
+check("counts outcomes", stats.total === 5 && stats.completed === 2 && stats.failed === 2 && stats.paid === 1);
+check("waiting for photos is not 'in progress'", stats.processing === 0 && stats.awaitingImages === 1);
+check("success rate", stats.successRate === 50);
+check("median processing time", stats.medianMinutes === 15, `${stats.medianMinutes}`);
+check("every WAN attempt is counted", stats.wanSubmissions === 6);
+check("delivered footage seconds", stats.wanSecondsDelivered === 5);
+check("errors grouped", stats.topErrors.length === 1 && stats.topErrors[0].count === 2);
+
+// ── 12. Locked preview render ─────────────────────────────────────────────
+section("Locked preview");
+if (!ffmpegAvailable()) {
+  console.log("  skip  no ffmpeg binary available");
+} else {
+  const dir = mkdtempSync(join(tmpdir(), "svp-selftest-"));
+  try {
+    const { resolveFfmpegPath } = await import("@/services/video/assembler");
+    const ffmpeg = resolveFfmpegPath();
+    const source = join(dir, "film.mp4");
+    execFileSync(ffmpeg, ["-y", "-loglevel", "error", "-f", "lavfi", "-i", "testsrc2=size=1080x1920:rate=30",
+      "-t", "15", "-c:v", "libx264", "-preset", "ultrafast", "-pix_fmt", "yuv420p", source]);
+    const preview = await renderLockedPreview(source);
+    const out = join(dir, "preview.mp4");
+    writeFileSync(out, preview);
+    const report = (() => {
+      try { return execFileSync(ffmpeg, ["-hide_banner", "-i", out], { stdio: ["ignore", "pipe", "pipe"] }).toString(); }
+      catch (e) { return String((e as { stderr?: Buffer }).stderr ?? ""); }
+    })();
+    const size = report.match(/Video:.*?(\d{2,5})x(\d{2,5})/);
+    const w = Number(size?.[1]); const h = Number(size?.[2]);
+    check("preview is a valid MP4", preview.length > 1000 && !!size, `${(preview.length / 1024).toFixed(0)} KB`);
+    check("preview is low resolution (320 px short side)", Math.min(w, h) === 320, `${w}x${h}`);
+    check("preview keeps the portrait orientation", h > w);
+    check("preview has no audio track", !/Audio:/.test(report));
+    const sourceSize = readFileSync(source).length;
+    check("preview is much smaller than the film", preview.length < sourceSize / 3, `${(sourceSize / 1024).toFixed(0)} KB → ${(preview.length / 1024).toFixed(0)} KB`);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
   }
 }
 

@@ -1,87 +1,34 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { getVideoJobsStatus } from "@/lib/google-video";
-import type { VideoOrder } from "@/types/database";
+import { driveActiveJobs } from "@/services/video/driver";
 
-// Polls Veo and streams finished clips into Supabase Storage.
-// 60s is the Vercel Hobby ceiling; without this the route is cut off at 10s.
+/**
+ * Move the signed-in customer's active videos along.
+ *
+ * The video list calls this every few seconds while something is generating.
+ * It goes through the same leased driver as the video page and the scheduled
+ * job, so it can never run a step another caller is already running.
+ *
+ * This route used to poll only the old Google Veo operations and mark every
+ * order without Veo ids as failed after three minutes — which, since the
+ * property-video pipeline has no Veo ids, failed every new video whose list
+ * page happened to be open. Legacy Veo orders are still finished here: the
+ * job driver polls their operations on the path they started on.
+ */
+
+// One step can import photographs or render with ffmpeg.
 export const maxDuration = 60;
-
-// A real Veo job finishes in minutes; anything still processing after this is
-// stuck, so fail it instead of showing a progress bar that lingers for hours.
-const MAX_PROCESSING_MS = 30 * 60 * 1000; // 30 minutes
-// An order that never got job IDs can never complete — fail it quickly (after a
-// short grace window covering the create→start race).
-const NO_JOB_GRACE_MS = 3 * 60 * 1000; // 3 minutes
 
 export async function POST() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  // The server client is untyped, so name the shape the select actually returns
-  // rather than reaching for `any` at each column below.
-  type PollableOrder = Pick<
-    VideoOrder,
-    "id" | "video_job_id" | "video_job_ids" | "status" | "created_at"
-  >;
-
-  const { data: orders } = await supabase
-    .from("video_orders")
-    .select("id, video_job_id, video_job_ids, status, created_at")
-    .eq("user_id", user.id)
-    .eq("status", "processing")
-    .returns<PollableOrder[]>();
-
-  if (!orders?.length) return NextResponse.json({ updated: 0 });
-
-  let updated = 0;
-  const errors: string[] = [];
-
-  await Promise.all(
-    orders.map(async (order) => {
-      // Auto-fail orders stuck for more than 30 minutes with no job IDs
-      const age = Date.now() - new Date(order.created_at).getTime();
-
-      const jobIds: string[] = order.video_job_ids?.length
-        ? order.video_job_ids
-        : order.video_job_id
-        ? [order.video_job_id]
-        : [];
-
-      if (!jobIds.length) {
-        // No jobs were ever started for this order — it can never complete.
-        if (age > NO_JOB_GRACE_MS) {
-          await supabase.from("video_orders").update({ status: "failed" }).eq("id", order.id);
-          updated++;
-        }
-        return;
-      }
-
-      try {
-        const result = await getVideoJobsStatus(jobIds, order.id);
-        if (result.status === "completed") {
-          await supabase.from("video_orders").update({
-            status: "ready",
-            ...(result.videoUrls?.length && {
-              video_url: result.videoUrls[0],
-              video_urls: result.videoUrls,
-            }),
-          }).eq("id", order.id);
-          updated++;
-        } else if (result.status === "failed") {
-          await supabase.from("video_orders").update({ status: "failed" }).eq("id", order.id);
-          updated++;
-        } else if (age > MAX_PROCESSING_MS) {
-          // Still in_progress/queued after 6 hours — mark failed
-          await supabase.from("video_orders").update({ status: "failed" }).eq("id", order.id);
-          updated++;
-        }
-      } catch (e) {
-        errors.push(String(e));
-      }
-    })
-  );
-
-  return NextResponse.json({ updated, errors: errors.length ? errors : undefined });
+  try {
+    const summary = await driveActiveJobs({ userId: user.id, maxOrders: 5, startNewStepsForMs: 15_000 });
+    return NextResponse.json({ updated: summary.advanced + summary.stale });
+  } catch (e) {
+    console.error(`[poll-video-status] ${e instanceof Error ? e.message : String(e)}`);
+    return NextResponse.json({ error: "Status kunne ikke opdateres" }, { status: 500 });
+  }
 }

@@ -9,6 +9,42 @@ import { VideoDemo } from "@/components/video-demo";
 import { VideoListPoller } from "@/components/video-list-poller";
 import { VideoOrderCard } from "@/components/video-order-card";
 import { PresentationVideo } from "@/components/presentation-video";
+import { orderMediaList, videoFileRoute } from "@/lib/video-media";
+import { orderLimits } from "@/lib/video-job-policy";
+
+/**
+ * What the order cards receive. Only fields they render, and never a storage
+ * URL: a finished video is linked through the file route, which checks
+ * payment before it hands anything out.
+ */
+function toCardOrder(order: VideoOrder) {
+  const hasVideo = order.status === "ready" && orderMediaList(order).length > 0;
+  return {
+    id: order.id,
+    title: order.title,
+    status: order.status,
+    created_at: order.created_at,
+    image_urls: order.image_urls,
+    paid: (order as { paid?: boolean | null }).paid ?? false,
+    video_url: hasVideo ? videoFileRoute(order.id) : null,
+  };
+}
+
+function errorMessage(code: string | undefined): string | null {
+  const limits = orderLimits();
+  switch (code) {
+    case "busy":
+      return `Du har allerede ${limits.maxActive} videoer i gang. Vent til en af dem er færdig, før du bestiller den næste.`;
+    case "daily":
+      return `Du har bestilt ${limits.maxPerDay} videoer det sidste døgn. Prøv igen i morgen, eller skriv til mail@somevideopost.com.`;
+    case "url":
+      return "Linket til boligen er ikke gyldigt. Indsæt hele adressen, der starter med https://.";
+    case "create":
+      return "Videoen kunne ikke oprettes. Prøv igen om lidt.";
+    default:
+      return null;
+  }
+}
 
 async function getVideoOrders(): Promise<VideoOrder[]> {
   const supabase = await createClient();
@@ -153,8 +189,13 @@ function StatPill({ value, label }: { value: string; label: string }) {
   );
 }
 
-export default async function VideosPage() {
-  const [orders, currency] = await Promise.all([getVideoOrders(), getCurrency()]);
+export default async function VideosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const [orders, currency, { error: errorCode }] = await Promise.all([getVideoOrders(), getCurrency(), searchParams]);
+  const pageError = errorMessage(errorCode);
   const videoPrice = formatPriceKey("video", currency);
 
   return (
@@ -184,6 +225,12 @@ export default async function VideosPage() {
       />
 
       <div className="flex-1">
+        {pageError && (
+          <div className="mx-8 mt-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            {pageError}
+          </div>
+        )}
+
         {/* ── Product presentation video ── */}
         <section className="border-b border-slate-200 bg-white px-8 py-12">
           <div className="mx-auto max-w-4xl">
@@ -411,7 +458,7 @@ export default async function VideosPage() {
               <PracticalInfo />
               <VideoListPoller hasProcessing={orders.some((o) => o.status === "processing")} />
               {orders.map((order) => (
-                <VideoOrderCard key={order.id} order={order as VideoOrder} />
+                <VideoOrderCard key={order.id} order={toCardOrder(order)} />
               ))}
             </div>
             <FAQSection />

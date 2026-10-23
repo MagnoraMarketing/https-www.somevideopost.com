@@ -29,7 +29,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
   if (!order) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const ok = await retryScene(id, sceneIndex);
-  if (!ok) return NextResponse.json({ error: "Scenen findes ikke" }, { status: 404 });
+  if (!ok) return NextResponse.json({ error: "Kun en fejlet scene kan prøves igen" }, { status: 409 });
 
   // A retried scene puts the job back into generation, whatever it moved on to.
   await createAdminClient()
