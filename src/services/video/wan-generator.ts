@@ -24,6 +24,28 @@ const LOG = "[wan]";
 
 export const MAX_SCENE_ATTEMPTS = 3;
 
+/**
+ * WAN cannot be used at all — a rejected API key, a refused account, or
+ * missing configuration. Retrying a scene cannot fix any of these, so instead
+ * of burning every scene's attempts one by one (and leaving the customer on
+ * a progress bar that never moves) the job stops at once with this message.
+ */
+export class WanUnavailableError extends Error {
+  constructor(detail: string) {
+    super(
+      "Videogeneratoren afviste forespørgslen, så scenerne kunne ikke laves. " +
+      `Det skyldes opsætningen hos os, ikke dine billeder — prøv igen senere. (${detail.slice(0, 120)})`,
+    );
+    this.name = "WanUnavailableError";
+  }
+}
+
+/** Errors no retry can fix: authentication, authorisation, missing configuration. */
+export function isFatalWanError(e: unknown): boolean {
+  if (e instanceof WanConfigError) return true;
+  return e instanceof WanApiError && (e.status === 401 || e.status === 403);
+}
+
 export type SceneRow = {
   id: string;
   order_id: string;
@@ -127,6 +149,13 @@ async function submitScene(scene: SceneRow, aspect: AspectRatio): Promise<void> 
     });
   } catch (e) {
     const message = e instanceof WanApiError || e instanceof WanConfigError ? e.message : String(e);
+    if (isFatalWanError(e)) {
+      // Not this scene's fault: leave its attempts untouched so a retry after
+      // the configuration is fixed gets the full budget, and stop the job.
+      console.error(`${LOG} scene ${scene.scene_index} submit refused: ${message}`);
+      await updateScene(scene.id, { status: "pending", error_message: message.slice(0, 500) });
+      throw new WanUnavailableError(e instanceof WanApiError ? `WAN ${e.status}` : "WAN ikke konfigureret");
+    }
     const attempts = scene.attempts + 1;
     console.error(`${LOG} scene ${scene.scene_index} submit failed (attempt ${attempts}): ${message}`);
     await updateScene(scene.id, {

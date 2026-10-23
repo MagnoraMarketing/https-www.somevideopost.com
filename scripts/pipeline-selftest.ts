@@ -18,7 +18,8 @@ import { extractImageCandidates, normalizeForDedupe } from "@/services/property-
 import { extractProperty } from "@/services/property-import/extract-property";
 import { readImageInfo } from "@/services/property-import/image-file";
 import { CHOSEN_IMAGE_LIMITS, IMAGE_LIMITS } from "@/services/property-import/download-images";
-import { DEFAULT_WAN_MODEL, KNOWN_WAN_MODELS, wanModelSupported } from "@/lib/wan/client";
+import { DEFAULT_WAN_MODEL, KNOWN_WAN_MODELS, wanModelSupported, WanApiError, WanConfigError } from "@/lib/wan/client";
+import { isFatalWanError, WanUnavailableError } from "@/services/video/wan-generator";
 import { buildStoryboard, distributeDurations, selectImages, type ImageAnalysis } from "@/services/video/ai-director";
 import { buildScenePrompt, PROPERTY_FIDELITY_RULES } from "@/lib/wan/prompt";
 import { VIDEO_STYLE_LIST, resolveVideoStyle } from "@/lib/video-styles";
@@ -261,6 +262,18 @@ if (!ffmpegAvailable()) {
     }
   }
 }
+
+// ── 7b. WAN failures that no retry can fix ──────────────────────────────
+section("WAN fatal errors");
+check("401 invalid API key is fatal", isFatalWanError(new WanApiError("Invalid API-key provided", 401)));
+check("403 refused account is fatal", isFatalWanError(new WanApiError("Access denied", 403)));
+check("missing configuration is fatal", isFatalWanError(new WanConfigError(["ALIBABA_CLOUD_API_KEY"])));
+check("429 rate limit is retried, not fatal", !isFatalWanError(new WanApiError("Throttling", 429)));
+check("500 provider outage is retried, not fatal", !isFatalWanError(new WanApiError("Internal error", 500)));
+check("network error is retried, not fatal", !isFatalWanError(new Error("fetch failed")));
+const fatal = new WanUnavailableError("WAN 401");
+check("customer message says it is not their photos", /ikke dine billeder/.test(fatal.message) && /WAN 401/.test(fatal.message));
+check("customer message names no secret", !/key|nøgle|ALIBABA/i.test(fatal.message));
 
 // ── 8. Private delivery ───────────────────────────────────────────────────
 section("Private delivery");
