@@ -6,7 +6,8 @@ import {
 } from "@/lib/wan/client";
 import { WAN_NEGATIVE_PROMPT } from "@/lib/wan/prompt";
 import { sceneClipPath } from "@/services/property-import/store-images";
-import { storeVideoDeliverable } from "./media";
+import { resolveVideoUrl, storeVideoDeliverable } from "./media";
+import { renderPhotoClip } from "./photo-motion";
 import type { AspectRatio } from "./assembler";
 import type { Storyboard } from "./ai-director";
 
@@ -23,6 +24,22 @@ import type { Storyboard } from "./ai-director";
 const LOG = "[wan]";
 
 export const MAX_SCENE_ATTEMPTS = 3;
+
+export type VideoEngine = "photo-motion" | "wan";
+
+/**
+ * Which engine makes the scene clips.
+ *
+ * "photo-motion" (the default) animates each actual photograph with ffmpeg —
+ * no external video service, no API key, no per-video cost. "wan" sends the
+ * photographs to Alibaba's WAN image-to-video model (VIDEO_ENGINE=wan).
+ */
+export function videoEngine(env: Record<string, string | undefined> = process.env): VideoEngine {
+  return env.VIDEO_ENGINE?.trim().toLowerCase() === "wan" ? "wan" : "photo-motion";
+}
+
+/** Stop starting new renders after this long, so one job step stays inside the function limit. */
+const PHOTO_RENDER_BUDGET_MS = 25_000;
 
 /**
  * WAN cannot be used at all — a rejected API key, a refused account, or
@@ -245,6 +262,8 @@ export function summariseScenes(scenes: SceneRow[]): SceneProgress {
  * WAN — which is what keeps the whole pipeline inside a serverless timeout.
  */
 export async function advanceScenes(orderId: string, aspect: AspectRatio): Promise<SceneProgress> {
+  if (videoEngine() === "photo-motion") return advancePhotoScenes(orderId, aspect);
+
   const config = getWanConfig();
   const scenes = await loadScenes(orderId);
 
@@ -296,4 +315,70 @@ export async function resetFailedScenes(orderId: string): Promise<number> {
     .select("id");
   if (error) throw new Error(`Kunne ikke nulstille scener: ${error.message}`);
   return (data ?? []).length;
+}
+
+/**
+ * Render scene clips from the photographs themselves (see photo-motion.ts),
+ * as many as fit in one job step. Scenes left over from an earlier WAN
+ * attempt are rendered here too, so switching engines finishes old jobs.
+ */
+async function advancePhotoScenes(orderId: string, aspect: AspectRatio): Promise<SceneProgress> {
+  const scenes = await loadScenes(orderId);
+  const todo = scenes.filter((s) => s.status !== "succeeded" && s.status !== "failed" && s.attempts < MAX_SCENE_ATTEMPTS);
+
+  // The photographs' own proportions decide the camera move.
+  const imageIds = todo.map((s) => s.image_id).filter((id): id is string => !!id);
+  const { data: images } = imageIds.length
+    ? await createAdminClient()
+        .from("video_source_images")
+        .select("id, width, height")
+        .in("id", imageIds)
+        .returns<{ id: string; width: number; height: number }[]>()
+    : { data: [] as { id: string; width: number; height: number }[] };
+  const dims = new Map((images ?? []).map((image) => [image.id, image]));
+
+  const started = Date.now();
+  for (const scene of todo) {
+    if (Date.now() - started > PHOTO_RENDER_BUDGET_MS) break;
+
+    if (!scene.input_image_url) {
+      await updateScene(scene.id, { status: "failed", error_message: "Scenen har intet kildebillede" });
+      continue;
+    }
+
+    const attempts = scene.attempts + 1;
+    try {
+      const source = await resolveVideoUrl(scene.input_image_url);
+      if (!source) throw new Error("Billedet kunne ikke hentes fra lageret");
+      const size = scene.image_id ? dims.get(scene.image_id) : undefined;
+      const { buffer } = await renderPhotoClip({
+        source,
+        imageWidth: size?.width ?? 0,
+        imageHeight: size?.height ?? 0,
+        aspect,
+        sceneSeconds: Number(scene.duration_seconds),
+        camera: scene.camera,
+        index: scene.scene_index,
+      });
+      const clipUrl = await storeVideoDeliverable(sceneClipPath(scene.order_id, scene.scene_index, attempts), buffer);
+      await updateScene(scene.id, {
+        status: "succeeded",
+        attempts,
+        wan_task_id: null,
+        clip_url: clipUrl,
+        error_message: null,
+        completed_at: new Date().toISOString(),
+      });
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      console.error(`${LOG} scene ${scene.scene_index} photo render failed (attempt ${attempts}): ${message}`);
+      await updateScene(scene.id, {
+        attempts,
+        status: attempts >= MAX_SCENE_ATTEMPTS ? "failed" : "pending",
+        error_message: message.slice(0, 500),
+      });
+    }
+  }
+
+  return summariseScenes(await loadScenes(orderId));
 }
