@@ -90,7 +90,8 @@ export function ffmpegAvailable(): boolean {
   try { resolveFfmpegPath(); return true; } catch { return false; }
 }
 
-function run(bin: string, args: string[], timeoutMs = 240_000): Promise<string> {
+/** Run ffmpeg (or ffprobe-style ffmpeg calls); resolves with its output, rejects with the tail of stderr. */
+export function run(bin: string, args: string[], timeoutMs = 240_000): Promise<string> {
   return new Promise((resolve, reject) => {
     const child = spawn(bin, args, { stdio: ["ignore", "pipe", "pipe"] });
     let stdout = "";
@@ -150,7 +151,8 @@ export function framesForScenes(durations: number[], totalFrames = TARGET_FRAMES
   return frames;
 }
 
-async function fetchToFile(source: string, path: string): Promise<void> {
+/** Download a URL (or copy a local path) to a file. */
+export async function fetchToFile(source: string, path: string): Promise<void> {
   if (!/^https?:\/\//i.test(source)) {
     // Already a local file — used by the self-test and by any caller that
     // downloaded the clip itself.

@@ -121,7 +121,7 @@ export default async function AdminVideosPage({
     <div className="space-y-6 p-8">
       <div>
         <h1 className="text-xl font-bold text-slate-900">Video-pipeline</h1>
-        <p className="text-sm text-slate-500">Boligimport, billedvalg, WAN-opgaver og samling.</p>
+        <p className="text-sm text-slate-500">Boligimport, billedvalg, scene-klip og samling.</p>
       </div>
 
       <section>
@@ -133,7 +133,7 @@ export default async function AdminVideosPage({
           <Stat label="I gang" value={stats.processing} hint={stats.awaitingImages ? `${stats.awaitingImages} venter på billeder` : undefined} />
           <Stat label="Betalt" value={stats.paid} />
           <Stat label="Behandlingstid" value={stats.medianMinutes === null ? "—" : `${stats.medianMinutes.toFixed(1)} min`} hint="median" />
-          <Stat label="WAN-kald" value={stats.wanSubmissions} hint={`${stats.scenesFailed} scener fejlede`} />
+          <Stat label="Klip-forsøg" value={stats.wanSubmissions} hint={`${stats.scenesFailed} scener fejlede`} />
           <Stat label="Færdige scener" value={`${stats.wanSecondsDelivered.toFixed(0)} s`} hint="genereret footage" />
         </div>
         {stats.topErrors.length > 0 && (
@@ -216,7 +216,7 @@ export default async function AdminVideosPage({
           </section>
 
           <section className="rounded-2xl border border-slate-200 bg-white p-5 lg:col-span-2">
-            <h2 className="mb-3 text-sm font-bold text-slate-900">Scener / WAN-opgaver</h2>
+            <h2 className="mb-3 text-sm font-bold text-slate-900">Scener / klip</h2>
             {scenes.length === 0 ? (
               <p className="text-xs text-slate-500">Ingen scener endnu.</p>
             ) : (

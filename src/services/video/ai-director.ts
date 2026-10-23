@@ -1,9 +1,11 @@
 import "server-only";
+import Anthropic from "@anthropic-ai/sdk";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { resolveVideoStyle, type VideoStyle, type VideoStyleId } from "@/lib/video-styles";
 import { buildScenePrompt } from "@/lib/wan/prompt";
 import type { StoredImage } from "@/services/property-import";
 import type { ExtractedProperty } from "@/services/property-import/extract-property";
+import { downscaleForAnalysis } from "./photo-motion";
 
 /**
  * The AI Director.
@@ -106,94 +108,180 @@ function clampScore(value: unknown, fallback: number): number {
   return Number.isFinite(n) ? Math.max(0, Math.min(100, Math.round(n))) : fallback;
 }
 
-/**
- * Analyse the actual photographs.
- *
- * Images are sent as inline data with an index the model must echo back, so a
- * hallucinated or reordered response can be discarded per-image instead of
- * silently mismatching a description to the wrong photo.
- */
-export async function analyzeImages(images: StoredImage[]): Promise<ImageAnalysis[]> {
-  const model = geminiModel();
-  if (!model || images.length === 0) {
-    if (!model) console.warn(`${LOG} GEMINI_API_KEY not configured — using deterministic analysis`);
-    return images.map(deterministicAnalysis);
-  }
+const ANALYSIS_INSTRUCTIONS = `You are a real-estate video director reviewing the actual photographs of one holiday property.
 
-  const batch = images.slice(0, 20);
-  const parts: ({ inlineData: { mimeType: string; data: string } } | string)[] = [];
-  const included: StoredImage[] = [];
-
-  for (const [index, image] of batch.entries()) {
-    const inline = await fetchImageAsInlineData(image.storageUrl);
-    if (!inline) continue;
-    parts.push(`IMAGE ${index}:`);
-    parts.push({ inlineData: inline });
-    included.push(image);
-  }
-
-  if (!included.length) {
-    console.warn(`${LOG} no images could be read for analysis — using deterministic analysis`);
-    return images.map(deterministicAnalysis);
-  }
-
-  const prompt = `You are a real-estate video director reviewing the actual photographs of one holiday property.
-
-For EACH numbered image above, report only what is genuinely visible. Never describe something that is not in the frame.
-
-Return ONLY a JSON array, no markdown fence, one object per image, in the same order:
-[{"index":0,"category":"exterior","description":"...","heroScore":0-100,"qualityScore":0-100,"features":["..."],"reject":null}]
+For EACH numbered image, report only what is genuinely visible. Never describe something that is not in the frame.
 
 category must be one of: ${SCENE_CATEGORIES.join(", ")}.
 description: one factual sentence about what the photo shows (English).
-heroScore: how well this image would OPEN a 15-second presentation film.
-qualityScore: sharpness, exposure and framing.
+heroScore: 0-100, how well this image would OPEN a 15-second presentation film.
+qualityScore: 0-100, sharpness, exposure and framing.
 features: concrete visible things ("private pool", "sea view", "double bed"). Only what you can actually see.
 reject: a short reason if the image is not a usable property photo (a screenshot, a floor plan, a map, a logo, heavily blurred, a duplicate of an earlier image); otherwise null.`;
 
+/** Structured-output schema for Claude: one entry per numbered image. */
+const ANALYSIS_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  required: ["images"],
+  properties: {
+    images: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["index", "category", "description", "heroScore", "qualityScore", "features", "reject"],
+        properties: {
+          index: { type: "integer" },
+          category: { type: "string", enum: [...SCENE_CATEGORIES] },
+          description: { type: "string" },
+          heroScore: { type: "integer" },
+          qualityScore: { type: "integer" },
+          features: { type: "array", items: { type: "string" } },
+          reject: { anyOf: [{ type: "string" }, { type: "null" }] },
+        },
+      },
+    },
+  },
+} as const;
+
+/**
+ * Turn the model's per-image entries into analyses. Entries are matched by
+ * the index the model echoes back, so a missing or reordered entry falls back
+ * per image instead of describing the wrong photo; images that could not be
+ * sent still get a record, or they would silently drop out of selection.
+ */
+function analysesFromEntries(
+  entries: Record<string, unknown>[],
+  included: StoredImage[],
+  images: StoredImage[],
+): ImageAnalysis[] {
+  const byIndex = new Map<number, Record<string, unknown>>();
+  for (const entry of entries) {
+    const index = Number(entry.index);
+    if (Number.isInteger(index) && index >= 0 && index < included.length) byIndex.set(index, entry);
+  }
+
+  const analyses: ImageAnalysis[] = included.map((image, index) => {
+    const entry = byIndex.get(index);
+    if (!entry) return deterministicAnalysis(image);
+    const reject = typeof entry.reject === "string" && entry.reject.trim() ? entry.reject.trim().slice(0, 160) : undefined;
+    return {
+      imageId: image.id,
+      category: coerceCategory(entry.category),
+      description: String(entry.description ?? "").slice(0, 400) || "Property photograph",
+      heroScore: clampScore(entry.heroScore, 40),
+      qualityScore: clampScore(entry.qualityScore, 50),
+      features: Array.isArray(entry.features)
+        ? entry.features.filter((f): f is string => typeof f === "string").slice(0, 8)
+        : [],
+      reject,
+    };
+  });
+
+  const analysed = new Set(analyses.map((a) => a.imageId));
+  for (const image of images) {
+    if (!analysed.has(image.id)) analyses.push(deterministicAnalysis(image));
+  }
+  return analyses;
+}
+
+/**
+ * Claude looks at the photos (ANTHROPIC_API_KEY). Photos are downscaled
+ * first so a 20-photo request stays small. Null when Claude is not
+ * configured or the call fails, so the next analyser can take over.
+ */
+async function analyzeWithClaude(images: StoredImage[]): Promise<ImageAnalysis[] | null> {
+  if (!process.env.ANTHROPIC_API_KEY) return null;
+
+  const content: Anthropic.Beta.BetaContentBlockParam[] = [];
+  const included: StoredImage[] = [];
+  for (const image of images.slice(0, 20)) {
+    const jpeg = await downscaleForAnalysis(image.storageUrl);
+    if (!jpeg) continue;
+    content.push({ type: "text", text: `IMAGE ${included.length}:` });
+    content.push({ type: "image", source: { type: "base64", media_type: "image/jpeg", data: jpeg.toString("base64") } });
+    included.push(image);
+  }
+  if (!included.length) {
+    console.warn(`${LOG} no images could be read for Claude analysis`);
+    return null;
+  }
+  content.push({ type: "text", text: ANALYSIS_INSTRUCTIONS });
+
   try {
-    const result = await model.generateContent([...parts, prompt]);
-    const text = result.response.text();
-    const match = text.match(/\[[\s\S]*\]/);
-    if (!match) throw new Error("no JSON array in response");
-    const parsed = JSON.parse(match[0]) as Record<string, unknown>[];
-
-    const byIndex = new Map<number, Record<string, unknown>>();
-    for (const entry of parsed) {
-      const index = Number(entry.index);
-      if (Number.isInteger(index) && index >= 0 && index < included.length) byIndex.set(index, entry);
-    }
-
-    const analyses: ImageAnalysis[] = included.map((image, index) => {
-      const entry = byIndex.get(index);
-      if (!entry) return deterministicAnalysis(image);
-      const reject = typeof entry.reject === "string" && entry.reject.trim() ? entry.reject.trim().slice(0, 160) : undefined;
-      return {
-        imageId: image.id,
-        category: coerceCategory(entry.category),
-        description: String(entry.description ?? "").slice(0, 400) || "Property photograph",
-        heroScore: clampScore(entry.heroScore, 40),
-        qualityScore: clampScore(entry.qualityScore, 50),
-        features: Array.isArray(entry.features)
-          ? entry.features.filter((f): f is string => typeof f === "string").slice(0, 8)
-          : [],
-        reject,
-      };
+    const response = await new Anthropic().beta.messages.create({
+      model: process.env.AI_DIRECTOR_CLAUDE_MODEL || "claude-opus-5-5",
+      max_tokens: 16000,
+      betas: ["server-side-fallback-2026-06-01"],
+      fallbacks: [{ model: "claude-opus-4-8" }],
+      output_config: { effort: "low", format: { type: "json_schema", schema: ANALYSIS_SCHEMA } },
+      messages: [{ role: "user", content }],
     });
-
-    // Any image that could not be sent still needs a record, or it would
-    // silently disappear from selection.
-    const analysed = new Set(analyses.map((a) => a.imageId));
-    for (const image of images) {
-      if (!analysed.has(image.id)) analyses.push(deterministicAnalysis(image));
-    }
-
-    console.info(`${LOG} analysed ${analyses.length} property photos`);
+    if (response.stop_reason === "refusal") throw new Error("Claude declined the request");
+    const text = response.content.find((block) => block.type === "text")?.text;
+    if (!text) throw new Error("no text in response");
+    const parsed = JSON.parse(text) as { images?: Record<string, unknown>[] };
+    const analyses = analysesFromEntries(parsed.images ?? [], included, images);
+    console.info(`${LOG} Claude analysed ${included.length} property photos`);
     return analyses;
   } catch (e) {
-    console.warn(`${LOG} image analysis failed (${e instanceof Error ? e.message : String(e)}) — using deterministic analysis`);
-    return images.map(deterministicAnalysis);
+    console.warn(`${LOG} Claude image analysis failed (${e instanceof Error ? e.message : String(e)})`);
+    return null;
   }
+}
+
+/** Gemini looks at the photos (GEMINI_API_KEY). Null when not configured or the call fails. */
+async function analyzeWithGemini(images: StoredImage[]): Promise<ImageAnalysis[] | null> {
+  const model = geminiModel();
+  if (!model) return null;
+
+  const parts: ({ inlineData: { mimeType: string; data: string } } | string)[] = [];
+  const included: StoredImage[] = [];
+  for (const image of images.slice(0, 20)) {
+    const inline = await fetchImageAsInlineData(image.storageUrl);
+    if (!inline) continue;
+    parts.push(`IMAGE ${included.length}:`);
+    parts.push({ inlineData: inline });
+    included.push(image);
+  }
+  if (!included.length) {
+    console.warn(`${LOG} no images could be read for Gemini analysis`);
+    return null;
+  }
+
+  const prompt = `${ANALYSIS_INSTRUCTIONS}
+
+Return ONLY a JSON array, no markdown fence, one object per image, in the same order:
+[{"index":0,"category":"exterior","description":"...","heroScore":80,"qualityScore":70,"features":["..."],"reject":null}]`;
+
+  try {
+    const result = await model.generateContent([...parts, prompt]);
+    const match = result.response.text().match(/\[[\s\S]*\]/);
+    if (!match) throw new Error("no JSON array in response");
+    const analyses = analysesFromEntries(JSON.parse(match[0]) as Record<string, unknown>[], included, images);
+    console.info(`${LOG} Gemini analysed ${included.length} property photos`);
+    return analyses;
+  } catch (e) {
+    console.warn(`${LOG} Gemini image analysis failed (${e instanceof Error ? e.message : String(e)})`);
+    return null;
+  }
+}
+
+/**
+ * Analyse the actual photographs: Claude first, then Gemini, then the
+ * deterministic analysis that never guesses a room type.
+ *
+ * Images are numbered and the model echoes each number back, so a
+ * hallucinated or reordered response is discarded per image instead of
+ * silently mismatching a description to the wrong photo.
+ */
+export async function analyzeImages(images: StoredImage[]): Promise<ImageAnalysis[]> {
+  if (images.length === 0) return [];
+  const analyses = (await analyzeWithClaude(images)) ?? (await analyzeWithGemini(images));
+  if (analyses) return analyses;
+  console.warn(`${LOG} no image model available — using deterministic analysis`);
+  return images.map(deterministicAnalysis);
 }
 
 /**

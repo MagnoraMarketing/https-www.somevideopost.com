@@ -434,5 +434,59 @@ if (!ffmpegAvailable()) {
   }
 }
 
+// ── 12. Photo-motion engine (no video API) ────────────────────────────────
+section("Photo motion");
+{
+  const { planMotion, clipSeconds, renderPhotoClip } = await import("@/services/video/photo-motion");
+  const { videoEngine } = await import("@/services/video/wan-generator");
+  check("photo-motion is the default engine", videoEngine({}) === "photo-motion");
+  check("VIDEO_ENGINE=wan selects WAN", videoEngine({ VIDEO_ENGINE: " WAN " }) === "wan");
+  check("an unknown engine falls back to photo-motion", videoEngine({ VIDEO_ENGINE: "veo" }) === "photo-motion");
+
+  const reel = { frameWidth: 1080, frameHeight: 1920 };
+  check("landscape photo in a 9:16 reel pans across",
+    planMotion({ imageWidth: 1600, imageHeight: 1067, ...reel, index: 0 }) === "pan-right");
+  check("odd scenes pan the other way",
+    planMotion({ imageWidth: 1600, imageHeight: 1067, ...reel, index: 1 }) === "pan-left");
+  check("portrait photo in a 9:16 reel zooms full-frame",
+    planMotion({ imageWidth: 1080, imageHeight: 1800, ...reel, camera: "slow push in", index: 1 }) === "cover-zoom-in");
+  check("camera 'pull back' zooms out",
+    planMotion({ imageWidth: 1080, imageHeight: 1800, ...reel, camera: "slow pull back", index: 0 }) === "cover-zoom-out");
+  check("portrait photo in a 16:9 film is shown whole",
+    planMotion({ imageWidth: 800, imageHeight: 1200, frameWidth: 1920, frameHeight: 1080, index: 0 }).startsWith("fit-"));
+  check("unknown photo size is shown whole, never cropped blind",
+    planMotion({ imageWidth: 0, imageHeight: 0, ...reel, index: 0 }).startsWith("fit-"));
+  check("clip covers its scene plus the crossfade", clipSeconds(2.5) === 3.3, String(clipSeconds(2.5)));
+  check("clips are at least 2 seconds", clipSeconds(0.5) === 2);
+
+  if (!ffmpegAvailable()) {
+    console.log("  skip  no ffmpeg binary available");
+  } else {
+    const { resolveFfmpegPath } = await import("@/services/video/assembler");
+    const dir = mkdtempSync(join(tmpdir(), "svp-motion-test-"));
+    try {
+      const ffmpeg = resolveFfmpegPath();
+      const shapes = [[1600, 1067], [1080, 1800], [800, 1200], [2000, 800], [1200, 1200], [1600, 1067]] as const;
+      const durations = distributeDurations(shapes.length);
+      for (const aspect of ["9:16", "1:1", "16:9"] as const) {
+        const clips = [];
+        for (const [i, [w, h]] of shapes.entries()) {
+          const photo = join(dir, `p${i}.jpg`);
+          execFileSync(ffmpeg, ["-y", "-loglevel", "error", "-f", "lavfi", "-i", `testsrc2=size=${w}x${h}`, "-frames:v", "1", photo]);
+          const clip = await renderPhotoClip({ source: photo, imageWidth: w, imageHeight: h, aspect, sceneSeconds: durations[i], camera: null, index: i });
+          const path = join(dir, `${aspect.replace(":", "x")}-${i}.mp4`);
+          writeFileSync(path, clip.buffer);
+          clips.push({ source: path, durationSeconds: durations[i] });
+        }
+        const rendered = await assembleVideo(clips, { aspectRatio: aspect });
+        check(`${aspect}: six photo clips assemble to exactly ${TARGET_FRAMES} frames`, rendered.frameCount === TARGET_FRAMES, `${rendered.frameCount}`);
+        check(`${aspect}: exactly 15.000 seconds`, Math.abs(rendered.durationSeconds - 15) < 0.001, `${rendered.durationSeconds.toFixed(3)}s`);
+      }
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed === 0 ? 0 : 1);
