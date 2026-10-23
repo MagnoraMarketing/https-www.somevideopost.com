@@ -16,6 +16,6 @@
     <path d="M40 105 L160 105 C160 130 145 145 120 145 L80 145 C55 145 40 130 40 105 Z"/><path d="M55 105 L55 65 C55 52 75 52 75 62"/><path d="M70 145 L62 158 M130 145 L138 158"/>
   </g>
   <text x="540" y="1180" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="86" font-weight="700" fill="#ffffff">Badeværelse</text>
-  <text x="540" y="1250" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="40" font-weight="500" fill="#7FD4E8" letter-spacing="6">DEMO · VALENCIA</text>
+  <text x="540" y="1250" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="40" font-weight="500" fill="#7FD4E8" letter-spacing="6">DEMO</text>
   <text x="540" y="120" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="44" font-weight="700" fill="#ffffff" opacity="0.35">06 / 07</text>
 </svg>

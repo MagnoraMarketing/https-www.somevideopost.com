@@ -16,6 +16,6 @@
     <path d="M100 45 L100 150"/><path d="M45 85 C55 55 145 55 155 85 Z"/><path d="M60 150 L140 150"/><circle cx="150" cy="45" r="14"/>
   </g>
   <text x="540" y="1180" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="86" font-weight="700" fill="#ffffff">Terrasse</text>
-  <text x="540" y="1250" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="40" font-weight="500" fill="#FFD36B" letter-spacing="6">DEMO · VALENCIA</text>
+  <text x="540" y="1250" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="40" font-weight="500" fill="#FFD36B" letter-spacing="6">DEMO</text>
   <text x="540" y="120" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="44" font-weight="700" fill="#ffffff" opacity="0.35">07 / 07</text>
 </svg>

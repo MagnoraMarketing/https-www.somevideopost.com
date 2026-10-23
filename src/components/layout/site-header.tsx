@@ -30,7 +30,10 @@ export function SiteHeader({ active, locale = "da" }: { active?: NavKey; locale?
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
         <Link href="/" className="flex items-center gap-2">
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg font-bold text-sm text-white" style={{ background: ORANGE_GRADIENT }}>s</span>
-          <BrandWordmark />
+          {/* Short wordmark on phones, as on the front page — the full one plus
+              the language switcher, CTA and menu do not fit in 390px. */}
+          <span className="sm:hidden"><span className="text-base font-bold text-white">some</span></span>
+          <span className="hidden sm:inline"><BrandWordmark /></span>
         </Link>
         <nav className="hidden items-center gap-6 text-sm font-medium text-slate-300 md:flex">
           {navLinks.map((l) => (

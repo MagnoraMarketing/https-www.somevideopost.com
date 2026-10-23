@@ -16,6 +16,6 @@
     <path d="M45 95 L155 95 L155 150 L45 150 Z"/><path d="M45 122 L155 122"/><circle cx="75" cy="108" r="6"/><circle cx="105" cy="108" r="6"/><path d="M120 60 C120 45 145 45 145 60 L145 95"/>
   </g>
   <text x="540" y="1180" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="86" font-weight="700" fill="#ffffff">Køkken</text>
-  <text x="540" y="1250" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="40" font-weight="500" fill="#6BB8FF" letter-spacing="6">DEMO · VALENCIA</text>
+  <text x="540" y="1250" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="40" font-weight="500" fill="#6BB8FF" letter-spacing="6">DEMO</text>
   <text x="540" y="120" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="44" font-weight="700" fill="#ffffff" opacity="0.35">03 / 07</text>
 </svg>

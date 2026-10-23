@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link2, Sparkles, Share2, CheckCircle2 } from "lucide-react";
 import type { LandingT } from "@/lib/i18n";
+import { DEMO_PROPERTY, demoListingDisplayUrl } from "@/lib/demo-property";
 
 const PLATFORMS = [
   { name: "Facebook", color: "#1877F2", letter: "f" },
@@ -10,15 +11,25 @@ const PLATFORMS = [
   { name: "LinkedIn", color: "#0A66C2", letter: "in" },
 ];
 
-const SAMPLE_URL = "feriebolig-spanien.dk/d/68771546";
+const SAMPLE_URL = demoListingDisplayUrl();
 
-// Real property photos (Unsplash fallback — same as the cinematic walkthrough)
-const ROOM_PHOTOS = [
-  { key: "demoRoom1" as const, src: "https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=300&q=80" },
-  { key: "demoRoom2" as const, src: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=300&q=80" },
-  { key: "demoRoom3" as const, src: "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=300&q=80" },
-  { key: "demoRoom4" as const, src: "https://images.unsplash.com/photo-1601084881623-cbe9425f1297?auto=format&fit=crop&w=300&q=80" },
+/**
+ * The four rooms the demo "finds". Each slot shows the demo property's own
+ * photo of exactly that room when one has been added (src/lib/demo-property.ts),
+ * otherwise the neutral bundled illustration — never a stock photo passed off
+ * as the property.
+ */
+const ROOM_SLOTS = [
+  { key: "demoRoom1" as const, room: "facade" as const, fallback: "/walkthrough/01-facade.svg" },
+  { key: "demoRoom2" as const, room: "living" as const, fallback: "/walkthrough/04-living.svg" },
+  { key: "demoRoom3" as const, room: "bedroom" as const, fallback: "/walkthrough/05-bedroom.svg" },
+  { key: "demoRoom4" as const, room: "terrace" as const, fallback: "/walkthrough/07-terrace.svg" },
 ];
+
+const ROOM_PHOTOS = ROOM_SLOTS.map((slot) => ({
+  key: slot.key,
+  src: DEMO_PROPERTY.photos.find((photo) => photo.room === slot.room)?.src ?? slot.fallback,
+}));
 
 const KB_TRANSFORMS = [
   "scale(1.12) translate(-2%, -2%)",

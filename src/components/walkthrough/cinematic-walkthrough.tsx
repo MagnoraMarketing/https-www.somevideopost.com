@@ -7,7 +7,7 @@ import type { Locale } from "@/lib/i18n";
 // ── Types ───────────────────────────────────────────────────────────────────
 export type RoomKey =
   | "facade" | "entrance" | "kitchen" | "living"
-  | "bedroom" | "bathroom" | "terrace";
+  | "bedroom" | "bathroom" | "terrace" | "pool" | "other";
 
 export type Scene = { src: string; roomKey: RoomKey };
 
@@ -17,26 +17,28 @@ type Mode = "auto" | "explore";
 
 // ── Room labels per language ────────────────────────────────────────────────
 const ROOM_LABELS: Record<Locale, Record<RoomKey, string>> = {
-  da: { facade: "Facade", entrance: "Entré", kitchen: "Køkken", living: "Stue", bedroom: "Soveværelse", bathroom: "Badeværelse", terrace: "Terrasse" },
-  en: { facade: "Exterior", entrance: "Entrance", kitchen: "Kitchen", living: "Living room", bedroom: "Bedroom", bathroom: "Bathroom", terrace: "Terrace" },
-  es: { facade: "Fachada", entrance: "Entrada", kitchen: "Cocina", living: "Salón", bedroom: "Dormitorio", bathroom: "Baño", terrace: "Terraza" },
-  de: { facade: "Fassade", entrance: "Eingang", kitchen: "Küche", living: "Wohnzimmer", bedroom: "Schlafzimmer", bathroom: "Badezimmer", terrace: "Terrasse" },
+  da: { facade: "Facade", entrance: "Entré", kitchen: "Køkken", living: "Stue", bedroom: "Soveværelse", bathroom: "Badeværelse", terrace: "Terrasse", pool: "Pool", other: "Boligen" },
+  en: { facade: "Exterior", entrance: "Entrance", kitchen: "Kitchen", living: "Living room", bedroom: "Bedroom", bathroom: "Bathroom", terrace: "Terrace", pool: "Pool", other: "The property" },
+  es: { facade: "Fachada", entrance: "Entrada", kitchen: "Cocina", living: "Salón", bedroom: "Dormitorio", bathroom: "Baño", terrace: "Terraza", pool: "Piscina", other: "La propiedad" },
+  de: { facade: "Fassade", entrance: "Eingang", kitchen: "Küche", living: "Wohnzimmer", bedroom: "Schlafzimmer", bathroom: "Badezimmer", terrace: "Terrasse", pool: "Pool", other: "Die Unterkunft" },
 };
 
 const ROOM_WORD: Record<Locale, string> = { da: "Rum", en: "Room", es: "Sala", de: "Raum" };
 
-const META_LABELS: Record<Locale, { beds: string; baths: string; guests: string; reviews: string; perNight: string }> = {
-  da: { beds: "soveværelser", baths: "badeværelser", guests: "gæster", reviews: "anmeldelser", perNight: "/ nat" },
-  en: { beds: "bedrooms", baths: "bathrooms", guests: "guests", reviews: "reviews", perNight: "/ night" },
-  es: { beds: "dormitorios", baths: "baños", guests: "huéspedes", reviews: "reseñas", perNight: "/ noche" },
-  de: { beds: "Schlafzimmer", baths: "Badezimmer", guests: "Gäste", reviews: "Bewertungen", perNight: "/ Nacht" },
+const META_LABELS: Record<Locale, { beds: string; baths: string; guests: string }> = {
+  da: { beds: "soveværelser", baths: "badeværelser", guests: "gæster" },
+  en: { beds: "bedrooms", baths: "bathrooms", guests: "guests" },
+  es: { beds: "dormitorios", baths: "baños", guests: "huéspedes" },
+  de: { beds: "Schlafzimmer", baths: "Badezimmer", guests: "Gäste" },
 };
 
-const DEMO_TITLE_OVERRIDE: Record<Locale, string> = {
-  da: "Strandnær villa · Alicante, Spanien",
-  en: "Beachfront villa · Alicante, Spain",
-  es: "Villa en primera línea · Alicante, España",
-  de: "Strandvilla · Alicante, Spanien",
+// Shown until the demo property has a verified title (src/lib/demo-property.ts).
+// Deliberately says nothing about a particular home.
+const NEUTRAL_TITLE: Record<Locale, string> = {
+  da: "Eksempel på rundtur",
+  en: "Sample walkthrough",
+  es: "Recorrido de ejemplo",
+  de: "Beispiel-Rundgang",
 };
 
 const HINTS: Record<Locale, string> = {
@@ -137,9 +139,9 @@ export function CinematicWalkthrough({ locale = "da" }: { locale?: Locale }) {
   const [playing, setPlaying] = useState(false);
   const [mode, setMode] = useState<Mode>("auto");
   const [activeIdx, setActiveIdx] = useState(0);
-  const [title, setTitle] = useState(DEMO_TITLE_OVERRIDE[locale] ?? DEMO_TITLE_OVERRIDE.da);
+  const [title, setTitle] = useState<string | null>(null);
   const [filterKey, setFilterKey] = useState<FilterKey>("cinematic");
-  const [meta, setMeta] = useState<{ price?: string; guests?: string; beds?: string; baths?: string; rating?: string; reviews?: string }>({});
+  const [meta, setMeta] = useState<{ guests?: string; beds?: string; baths?: string }>({});
 
   const activeFilter = FILTERS.find((f) => f.key === filterKey) ?? FILTERS[0];
 
@@ -163,10 +165,6 @@ export function CinematicWalkthrough({ locale = "da" }: { locale?: Locale }) {
   useEffect(() => { scenesRef.current = scenes; }, [scenes]);
   useEffect(() => { playingRef.current = playing; }, [playing]);
   useEffect(() => { modeRef.current = mode; }, [mode]);
-  // The loader effect below runs once on mount but needs the *current* locale
-  // for its fallback title; a dep would re-run the whole fetch on every switch.
-  const localeRef = useRef(locale);
-  useEffect(() => { localeRef.current = locale; }, [locale]);
 
   // ── Load the default (bundled) tour, then try to upgrade to listing photos ──
   useEffect(() => {
@@ -179,18 +177,18 @@ export function CinematicWalkthrough({ locale = "da" }: { locale?: Locale }) {
       dirtyRef.current = true;
     });
 
-    // Progressive enhancement: real photos scraped from the listing (or curated
-    // photo placeholders) — only swapped in once fully preloaded.
+    // Progressive enhancement: the demo property's own photos and verified
+    // details (src/lib/demo-property.ts) — only swapped in once fully preloaded.
     fetch("/api/walkthrough-images")
       .then((r) => (r.ok ? r.json() : null))
-      .then(async (data: { title?: string; scenes?: Scene[]; price?: string; guests?: string; beds?: string; baths?: string; rating?: string; reviews?: string } | null) => {
+      .then(async (data: { title?: string; scenes?: Scene[]; guests?: string; beds?: string; baths?: string } | null) => {
         if (cancelled || !data?.scenes || data.scenes.length < 3) return;
         const loaded = await preloadScenes(data.scenes);
         if (cancelled || loaded.length < 3) return;
         setScenes(loaded);
         setReady(true);
-        setTitle((data.title ? data.title.slice(0, 60) : null) ?? DEMO_TITLE_OVERRIDE[localeRef.current] ?? DEMO_TITLE_OVERRIDE.da);
-        setMeta({ price: data.price, guests: data.guests, beds: data.beds, baths: data.baths, rating: data.rating, reviews: data.reviews });
+        setTitle(data.title ? data.title.slice(0, 60) : null);
+        setMeta({ guests: data.guests, beds: data.beds, baths: data.baths });
         tRef.current = Math.min(tRef.current, totalDuration(loaded.length) - 0.01);
         roomRef.current = Math.min(roomRef.current, loaded.length - 1);
         dirtyRef.current = true;
@@ -592,7 +590,7 @@ export function CinematicWalkthrough({ locale = "da" }: { locale?: Locale }) {
 
           {/* Top overlay: title + current room (below the phone notch) */}
           <div className="pointer-events-none absolute left-0 right-0 top-0 bg-gradient-to-b from-black/60 to-transparent p-3 pt-9">
-            <p className="truncate text-[11px] font-semibold text-white">{title}</p>
+            <p className="truncate text-[11px] font-semibold text-white">{title ?? NEUTRAL_TITLE[locale] ?? NEUTRAL_TITLE.da}</p>
             <div className="mt-1 flex items-center gap-1.5">
               <span className="inline-block rounded-full bg-white/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white backdrop-blur-sm">
                 {currentRoom}
@@ -625,26 +623,14 @@ export function CinematicWalkthrough({ locale = "da" }: { locale?: Locale }) {
           )}
 
           {/* Property info panel */}
-          {ready && (meta.price || meta.rating) && (
+          {/* Property facts — only those verified in src/lib/demo-property.ts */}
+          {ready && (meta.beds || meta.baths || meta.guests) && (
             <div className="pointer-events-none absolute left-0 right-0 bottom-10 px-3">
               {(() => { const ml = META_LABELS[locale] ?? META_LABELS.da; return (
-              <div className="flex items-end justify-between gap-2">
-                {/* Left: price + rooms */}
-                <div className="rounded-xl border border-white/10 bg-black/50 px-2.5 py-1.5 backdrop-blur-md">
-                  {meta.price && <p className="text-[11px] font-bold text-white">{meta.price} <span className="text-[9px] font-normal text-white/60">{ml.perNight}</span></p>}
-                  <div className="flex items-center gap-2 mt-0.5">
-                    {meta.beds && <span className="text-[9px] text-white/60">🛏 {meta.beds} {ml.beds}</span>}
-                    {meta.baths && <span className="text-[9px] text-white/60">🚿 {meta.baths} {ml.baths}</span>}
-                    {meta.guests && <span className="text-[9px] text-white/60">👥 {meta.guests} {ml.guests}</span>}
-                  </div>
-                </div>
-                {/* Right: rating */}
-                {meta.rating && (
-                  <div className="rounded-xl border border-white/10 bg-black/50 px-2.5 py-1.5 backdrop-blur-md text-right">
-                    <p className="text-[11px] font-bold text-white">⭐ {meta.rating}</p>
-                    {meta.reviews && <p className="text-[9px] text-white/60">{meta.reviews} {ml.reviews}</p>}
-                  </div>
-                )}
+              <div className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-black/50 px-2.5 py-1.5 backdrop-blur-md">
+                {meta.beds && <span className="text-[9px] text-white/70">🛏 {meta.beds} {ml.beds}</span>}
+                {meta.baths && <span className="text-[9px] text-white/70">🚿 {meta.baths} {ml.baths}</span>}
+                {meta.guests && <span className="text-[9px] text-white/70">👥 {meta.guests} {ml.guests}</span>}
               </div>
               ); })()}
             </div>

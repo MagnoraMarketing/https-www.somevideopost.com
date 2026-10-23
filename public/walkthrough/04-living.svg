@@ -16,6 +16,6 @@
     <path d="M50 105 L50 85 C50 78 56 72 63 72 L137 72 C144 72 150 78 150 85 L150 105"/><path d="M40 105 C33 105 28 111 28 118 L28 140 L172 140 L172 118 C172 111 167 105 160 105 L160 122 L40 122 Z"/><path d="M45 140 L45 152 M155 140 L155 152"/>
   </g>
   <text x="540" y="1180" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="86" font-weight="700" fill="#ffffff">Stue</text>
-  <text x="540" y="1250" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="40" font-weight="500" fill="#8BE0C0" letter-spacing="6">DEMO · VALENCIA</text>
+  <text x="540" y="1250" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="40" font-weight="500" fill="#8BE0C0" letter-spacing="6">DEMO</text>
   <text x="540" y="120" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="44" font-weight="700" fill="#ffffff" opacity="0.35">04 / 07</text>
 </svg>
