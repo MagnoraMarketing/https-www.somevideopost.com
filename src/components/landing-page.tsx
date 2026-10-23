@@ -357,7 +357,7 @@ export function LandingPage({ locale }: { locale: Locale }) {
         <div className="relative mx-auto max-w-6xl px-6">
           <div className="mb-16 text-center">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-orange-500/30 bg-orange-500/10 px-4 py-1.5 text-xs font-semibold text-orange-400">
-              <Sparkles size={11} /> Powered by Google AI
+              <Sparkles size={11} /> Powered by Claude AI
             </div>
             <h2 className="text-4xl font-bold text-white md:text-5xl lg:text-6xl">
               {t.aiTitle1}<br />

@@ -15,7 +15,7 @@ const STEPS = [
   "Henter billeder fra din annonce...",
   "Analyserer boligens stil og features...",
   "Genererer video med AI...",
-  "Tilføjer musik og overgange...",
+  "Tilføjer kamerabevægelser og overgange...",
   "Afsluttende touches...",
 ];
 
