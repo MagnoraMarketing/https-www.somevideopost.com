@@ -2,11 +2,11 @@
 
 import { useRef, useState } from "react";
 import { Sparkles, Volume2, VolumeX } from "lucide-react";
+import { DEMO_PROPERTY } from "@/lib/demo-property";
 
-// A real AI-generated sample presentation video, shown in a 9:16 phone frame
-// to illustrate the actual product output on the landing page.
-const DEMO_VIDEO_URL =
-  "https://r2.veo3ai.io/videos/ed952c81-3bcf-4d52-bdfc-f2c4a312f155-1080p-1785068502029.mp4";
+// The demo property's own presentation video (src/lib/demo-property.ts), shown
+// in a 9:16 phone frame. DemoPhoneSwitcher only renders this when it exists.
+const DEMO_VIDEO_URL = DEMO_PROPERTY.videoUrl ?? "";
 
 export function DemoVideoPhone({
   label,
