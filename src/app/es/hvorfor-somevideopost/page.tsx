@@ -50,7 +50,7 @@ const FAQ = [
   },
   {
     q: "¿Qué tan rápido está listo un vídeo IA?",
-    a: "La mayoría de los vídeos de presentación están terminados en menos de 15 minutos. Solo pegas un enlace de la propiedad o subes tus fotos, eliges un estilo, y la IA genera un vídeo con movimiento de cámara, transiciones y música mientras sigues el progreso en vivo en el panel.",
+    a: "La mayoría de los vídeos de presentación están terminados en menos de 15 minutos. Solo pegas un enlace de la propiedad o subes tus fotos, eliges un estilo, y la IA genera un vídeo con movimiento de cámara y transiciones mientras sigues el progreso en vivo en el panel.",
   },
   {
     q: "¿Puedo compartir directamente en Facebook, Instagram, TikTok y LinkedIn?",
@@ -246,7 +246,7 @@ export default function WhySomeVideoPostEsPage() {
               </span>
               <h2 className="text-3xl font-bold text-white md:text-4xl">Vídeos profesionales de propiedades — sin fotógrafo</h2>
               <p className="mt-4 text-base leading-relaxed text-slate-300">
-                La IA añade movimientos de cámara suaves, transiciones cinematográficas y música de fondo a tus
+                La IA añade movimientos de cámara suaves, y transiciones cinematográficas a tus
                 fotos y crea un vídeo de presentación espectacular en minutos. Sigues el progreso en vivo en el
                 panel — desde &ldquo;la IA genera&rdquo; hasta &ldquo;¡Listo!&rdquo;.
               </p>
@@ -254,7 +254,7 @@ export default function WhySomeVideoPostEsPage() {
                 {[
                   "Movimientos de cámara y transiciones cinematográficas automáticos",
                   "9:16 optimizado para Reels, TikTok y Shorts",
-                  "Música de fondo y texto adaptados a la propiedad",
+                  "Texto adaptado a la propiedad",
                   "Entregado directamente en la app, listo para compartir",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-2 text-sm text-slate-300">

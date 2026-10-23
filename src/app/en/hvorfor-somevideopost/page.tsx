@@ -50,7 +50,7 @@ const FAQ = [
   },
   {
     q: "How fast is an AI video ready?",
-    a: "Most presentation videos are finished in under 15 minutes. You simply paste a property link or upload your photos, pick a style, and AI generates a video with camera movement, transitions and music while you follow progress live in the dashboard.",
+    a: "Most presentation videos are finished in under 15 minutes. You simply paste a property link or upload your photos, pick a style, and AI generates a video with camera movement and transitions while you follow progress live in the dashboard.",
   },
   {
     q: "Can I share directly to Facebook, Instagram, TikTok and LinkedIn?",
@@ -246,7 +246,7 @@ export default function WhySomeVideoPostEnPage() {
               </span>
               <h2 className="text-3xl font-bold text-white md:text-4xl">Professional property videos — no photographer needed</h2>
               <p className="mt-4 text-base leading-relaxed text-slate-300">
-                AI adds smooth camera movement, cinematic transitions and background music to your photos and
+                AI adds smooth camera movement, and cinematic transitions to your photos and
                 creates a stunning presentation video in minutes. You follow progress live in the dashboard —
                 from &ldquo;AI generating&rdquo; to &ldquo;Ready&rdquo;.
               </p>
@@ -254,7 +254,7 @@ export default function WhySomeVideoPostEnPage() {
                 {[
                   "Cinematic camera movement and transitions automatically",
                   "9:16 optimised for Reels, TikTok and Shorts",
-                  "Background music and captions tailored to the property",
+                  "Captions tailored to the property",
                   "Delivered directly in the app, ready to share",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-2 text-sm text-slate-300">

@@ -266,7 +266,7 @@ export function NewVideoForm() {
                   </span>
                 </h2>
                 <p className="mt-2 text-sm text-blue-200 leading-relaxed">
-                  Vores AI omdanner dine billeder til en professionel præsentationsvideo med musik og flydende overgange.
+                  Vores AI omdanner dine billeder til en professionel præsentationsvideo med kamerabevægelser og flydende overgange.
                 </p>
                 <div className="mt-4 flex items-center gap-1">
                   {[...Array(5)].map((_, i) => (

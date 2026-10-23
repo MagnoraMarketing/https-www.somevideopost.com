@@ -32,7 +32,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Vídeo IA para Redes Sociales: Crea Vídeo con IA para Redes Sociales",
     description:
-      "Convierte un enlace o fotos en un vídeo social que engancha en minutos — listo para Instagram, TikTok, Facebook y LinkedIn, con movimientos de cámara, música y texto generados por IA.",
+      "Convierte un enlace o fotos en un vídeo social que engancha en minutos — listo para Instagram, TikTok, Facebook y LinkedIn, con movimientos de cámara y texto generados por IA.",
     type: "website",
     siteName: "somevideopost.com",
     locale: "es_ES",
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
 const FAQ = [
   {
     q: "¿Qué es el vídeo IA para redes sociales?",
-    a: "El vídeo IA para redes sociales es contenido de vídeo generado automáticamente por inteligencia artificial para plataformas como Instagram, TikTok, Facebook y LinkedIn. En somevideopost.com, pegas un enlace o subes fotos, y la IA añade movimiento de cámara, transiciones, música y un texto — produciendo un vídeo listo para publicar sin grabar ni editar.",
+    a: "El vídeo IA para redes sociales es contenido de vídeo generado automáticamente por inteligencia artificial para plataformas como Instagram, TikTok, Facebook y LinkedIn. En somevideopost.com, pegas un enlace o subes fotos, y la IA añade movimiento de cámara, transiciones y un texto — produciendo un vídeo listo para publicar sin grabar ni editar.",
   },
   {
     q: "¿En qué se diferencia de un vídeo con plantilla?",
@@ -55,7 +55,7 @@ const FAQ = [
   },
   {
     q: "¿Necesito saber editar vídeo?",
-    a: "No. Todo el sentido del vídeo IA para redes sociales es que no tocas una línea de tiempo ni software de edición. Tú aportas la entrada — un enlace o fotos — y la IA se encarga de la selección de tomas, el movimiento, la música y el texto automáticamente.",
+    a: "No. Todo el sentido del vídeo IA para redes sociales es que no tocas una línea de tiempo ni software de edición. Tú aportas la entrada — un enlace o fotos — y la IA se encarga de la selección de tomas, el movimiento y el texto automáticamente.",
   },
   {
     q: "¿Puedo generar un vídeo IA para redes sociales gratis?",
@@ -110,7 +110,7 @@ export default function SomeAiVideoEsPage() {
       featureList: [
         "Vídeo generado por IA a partir de un enlace o fotos subidas",
         "Exportación en 9:16, 1:1 y 16:9 para cada plataforma",
-        "Movimiento de cámara, transiciones y música automáticos",
+        "Movimiento de cámara y transiciones automáticos",
         "Textos escritos por IA para cada plataforma",
         "Publicación directa en Facebook, Instagram, TikTok, LinkedIn y YouTube",
       ],
@@ -155,7 +155,7 @@ export default function SomeAiVideoEsPage() {
           <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-slate-300">
             El vídeo IA para redes sociales es contenido de vídeo que la IA crea automáticamente para ti, listo
             para Instagram, TikTok, Facebook y LinkedIn. Pega un enlace o sube fotos, y somevideopost.com
-            construye un clip cinematográfico con movimiento, música y texto en minutos. Sin grabar, sin editar.
+            construye un clip cinematográfico con movimiento y texto en minutos. Sin grabar, sin editar.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link href="/signup" className="inline-flex items-center justify-center gap-2 rounded-xl px-7 py-3.5 text-sm font-bold text-white shadow-[0_0_30px_rgba(255,107,74,0.35)] transition-opacity hover:opacity-90" style={{ background: ORANGE_GRADIENT }}>
@@ -177,7 +177,7 @@ export default function SomeAiVideoEsPage() {
             redes sociales — a diferencia de un vídeo que grabas y editas a mano. En lugar de contratar a un
             videógrafo o aprender una app de edición, le das a somevideopost.com un punto de partida (un enlace
             de anuncio o un conjunto de fotos), y la IA hace el trabajo creativo: elige el orden de las tomas,
-            añade movimiento de cámara y transiciones, le pone música y escribe un texto ajustado a la plataforma
+            añade movimiento de cámara y transiciones y escribe un texto ajustado a la plataforma
             en la que vas a publicar.
           </p>
           <p className="mt-4 text-base leading-relaxed text-slate-300">
@@ -203,7 +203,7 @@ export default function SomeAiVideoEsPage() {
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             <Step n="Paso 1" icon={Link2} title="Pega un enlace o sube fotos" desc="Apunta somevideopost.com a tu anuncio, página de producto o unas fotos. La IA obtiene las imágenes y los detalles clave automáticamente." />
-            <Step n="Paso 2" icon={Sparkles} title="La IA genera el vídeo" desc="Se añaden automáticamente movimiento de cámara, transiciones, música de fondo y un texto adaptado a la plataforma — puedes previsualizarlo antes de decidir desbloquearlo." />
+            <Step n="Paso 2" icon={Sparkles} title="La IA genera el vídeo" desc="Se añaden automáticamente movimiento de cámara, transiciones y un texto adaptado a la plataforma — puedes previsualizarlo antes de decidir desbloquearlo." />
             <Step n="Paso 3" icon={Share2} title="Publica o descarga" desc="Comparte directamente en Facebook, Instagram, TikTok, LinkedIn y YouTube desde el panel, prográmalo para más tarde, o descárgalo en el formato que necesites." />
           </div>
         </div>
@@ -237,7 +237,7 @@ export default function SomeAiVideoEsPage() {
             <BenefitCard icon={Clock} title="Minutos, no días" desc="Sin sesión de fotos que programar, sin editor que informar. Pasa de un enlace o fotos a un vídeo terminado de una sentada." accent="bg-orange-500/15 text-orange-400" />
             <BenefitCard icon={TrendingUp} title="El vídeo gana a las fotos" desc="Los Reels, TikTok y Shorts superan habitualmente a las publicaciones estáticas — el vídeo IA te permite publicar vídeo siempre, no solo a veces." accent="bg-emerald-500/15 text-emerald-400" />
             <BenefitCard icon={Share2} title="Un recurso, cinco canales" desc="El mismo vídeo generado se exporta y comparte en Facebook, Instagram, TikTok, LinkedIn y YouTube desde un solo panel." accent="bg-blue-500/15 text-blue-400" />
-            <BenefitCard icon={Wand2} title="No hace falta saber editar" desc="La IA se encarga del ritmo, las transiciones y la música, así que cualquiera del equipo puede publicar vídeo con aspecto profesional." accent="bg-violet-500/15 text-violet-400" />
+            <BenefitCard icon={Wand2} title="No hace falta saber editar" desc="La IA se encarga del ritmo, las transiciones y los movimientos de cámara, así que cualquiera del equipo puede publicar vídeo con aspecto profesional." accent="bg-violet-500/15 text-violet-400" />
             <BenefitCard icon={Video} title="Resultado constante" desc="Cada vídeo sigue el mismo nivel de calidad, así que tu feed se ve coherente aunque publiquen varias personas." accent="bg-pink-500/15 text-pink-400" />
             <BenefitCard icon={Megaphone} title="Texto incluido" desc="La IA escribe un texto que coincide con el vídeo y la plataforma, así una publicación está lista — no a medias — en el momento en que lo está el vídeo." accent="bg-yellow-500/15 text-yellow-400" />
           </div>

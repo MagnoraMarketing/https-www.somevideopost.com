@@ -32,7 +32,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "SoMe AI Video: Create AI-Generated Video for Social Media",
     description:
-      "Turn a link or photos into a scroll-stopping social video in minutes — sized for Instagram, TikTok, Facebook and LinkedIn, with AI camera moves, music and captions.",
+      "Turn a link or photos into a scroll-stopping social video in minutes — sized for Instagram, TikTok, Facebook and LinkedIn, with AI camera moves and captions.",
     type: "website",
     siteName: "somevideopost.com",
     url: PAGE_URL,
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
 const FAQ = [
   {
     q: "What is SoMe AI video?",
-    a: "\"SoMe\" (social media) AI video is video content generated automatically by artificial intelligence for platforms like Instagram, TikTok, Facebook and LinkedIn. On somevideopost.com, you paste a link or upload photos, and AI adds camera movement, transitions, music and a caption — producing a ready-to-post video without filming or editing.",
+    a: "\"SoMe\" (social media) AI video is video content generated automatically by artificial intelligence for platforms like Instagram, TikTok, Facebook and LinkedIn. On somevideopost.com, you paste a link or upload photos, and AI adds camera movement, transitions and a caption — producing a ready-to-post video without filming or editing.",
   },
   {
     q: "How is SoMe AI video different from a template video?",
@@ -60,7 +60,7 @@ const FAQ = [
   },
   {
     q: "Do I need video editing skills?",
-    a: "No. The entire point of SoMe AI video is that you don't touch a timeline or editing software. You provide the input — a link or photos — and AI handles shot selection, movement, music and captioning automatically.",
+    a: "No. The entire point of SoMe AI video is that you don't touch a timeline or editing software. You provide the input — a link or photos — and AI handles shot selection, movement and captioning automatically.",
   },
   {
     q: "Can I generate a SoMe AI video for free?",
@@ -115,7 +115,7 @@ export default function SomeAiVideoPage() {
       featureList: [
         "AI-generated video from a link or uploaded photos",
         "9:16, 1:1 and 16:9 export for every platform",
-        "Automatic camera movement, transitions and music",
+        "Automatic camera movement and transitions",
         "AI-written captions per platform",
         "Direct publishing to Facebook, Instagram, TikTok, LinkedIn and YouTube",
       ],
@@ -160,7 +160,7 @@ export default function SomeAiVideoPage() {
           <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-slate-300">
             SoMe AI video is short for &ldquo;social media AI video&rdquo; — video content that AI creates for you automatically,
             ready for Instagram, TikTok, Facebook and LinkedIn. Paste a link or upload photos, and somevideopost.com
-            builds a cinematic clip with movement, music and a caption in minutes. No filming, no editing timeline.
+            builds a cinematic clip with movement and a caption in minutes. No filming, no editing timeline.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link href="/signup" className="inline-flex items-center justify-center gap-2 rounded-xl px-7 py-3.5 text-sm font-bold text-white shadow-[0_0_30px_rgba(255,107,74,0.35)] transition-opacity hover:opacity-90" style={{ background: ORANGE_GRADIENT }}>
@@ -181,7 +181,7 @@ export default function SomeAiVideoPage() {
             SoMe AI video is a video generated automatically by artificial intelligence, purpose-built for social media
             feeds — as opposed to a video you film and edit by hand. Instead of hiring a videographer or learning an
             editing app, you give somevideopost.com a starting point (a listing link or a set of photos), and AI does
-            the creative work: choosing shot order, adding camera movement and transitions, scoring it with music, and
+            the creative work: choosing shot order, adding camera movement and transitions, and
             writing a caption tuned to the platform you&apos;re posting to.
           </p>
           <p className="mt-4 text-base leading-relaxed text-slate-300">
@@ -206,7 +206,7 @@ export default function SomeAiVideoPage() {
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             <Step n="Step 1" icon={Link2} title="Paste a link or upload photos" desc="Point somevideopost.com at your listing, product page or a handful of photos. AI pulls in the images and key details automatically." />
-            <Step n="Step 2" icon={Sparkles} title="AI generates the video" desc="Camera movement, transitions, background music and a platform-matched caption are added automatically — you can preview it before deciding to unlock it." />
+            <Step n="Step 2" icon={Sparkles} title="AI generates the video" desc="Camera movement, transitions and a platform-matched caption are added automatically — you can preview it before deciding to unlock it." />
             <Step n="Step 3" icon={Share2} title="Publish or download" desc="Share straight to Facebook, Instagram, TikTok, LinkedIn and YouTube from the dashboard, schedule it for later, or download it in the format you need." />
           </div>
         </div>
@@ -240,7 +240,7 @@ export default function SomeAiVideoPage() {
             <BenefitCard icon={Clock} title="Minutes, not days" desc="No shoot to schedule, no editor to brief. Go from a link or photos to a finished video in one sitting." accent="bg-orange-500/15 text-orange-400" />
             <BenefitCard icon={TrendingUp} title="Video beats photos" desc="Reels, TikTok and Shorts routinely out-reach static posts — AI video lets you post video every time, not occasionally." accent="bg-emerald-500/15 text-emerald-400" />
             <BenefitCard icon={Share2} title="One asset, five channels" desc="The same generated video is exported and shared to Facebook, Instagram, TikTok, LinkedIn and YouTube from one dashboard." accent="bg-blue-500/15 text-blue-400" />
-            <BenefitCard icon={Wand2} title="No editing skill needed" desc="AI handles pacing, transitions and music, so anyone on the team can publish professional-looking video." accent="bg-violet-500/15 text-violet-400" />
+            <BenefitCard icon={Wand2} title="No editing skill needed" desc="AI handles pacing, transitions and camera movement, so anyone on the team can publish professional-looking video." accent="bg-violet-500/15 text-violet-400" />
             <BenefitCard icon={Video} title="Consistent output" desc="Every video follows the same quality bar, so your feed looks cohesive even when different people post to it." accent="bg-pink-500/15 text-pink-400" />
             <BenefitCard icon={Megaphone} title="Caption included" desc="AI writes a caption to match the video and platform, so a post is ready — not half-finished — the moment the video is." accent="bg-yellow-500/15 text-yellow-400" />
           </div>

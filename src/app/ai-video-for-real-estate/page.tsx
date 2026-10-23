@@ -49,7 +49,7 @@ export const metadata: Metadata = {
 const FAQ = [
   {
     q: "What is AI video for real estate?",
-    a: "AI video for real estate (or \"AI video for estate\") is a presentation video generated automatically from a property listing or photos, instead of being filmed by a videographer. somevideopost.com reads your listing link or uploaded photos and builds a cinematic video with camera movement, room-by-room flow, transitions and music — ready in minutes.",
+    a: "AI video for real estate (or \"AI video for estate\") is a presentation video generated automatically from a property listing or photos, instead of being filmed by a videographer. somevideopost.com reads your listing link or uploaded photos and builds a cinematic video with camera movement, room-by-room flow and transitions — ready in minutes.",
   },
   {
     q: "Can I use my existing listing photos?",
@@ -165,7 +165,7 @@ export default function AiVideoForRealEstatePage() {
               </h1>
               <p className="mt-5 max-w-lg text-base leading-relaxed text-slate-300">
                 AI video for real estate turns a listing link or a set of property photos into a professional
-                presentation video — with camera movement, room-by-room flow and music — in under 15 minutes.
+                presentation video — with camera movement and room-by-room flow — in under 15 minutes.
                 No videographer, no editing software, no waiting days for a shoot.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -192,8 +192,8 @@ export default function AiVideoForRealEstatePage() {
             AI video for real estate — sometimes searched as &ldquo;AI video for estate&rdquo; — is a property
             presentation video created automatically by artificial intelligence instead of a camera crew. You give
             somevideopost.com a listing link or upload photos of the property, and AI builds a video that moves
-            through the rooms in a natural sequence, adding cinematic camera motion, transitions and background
-            music, then generates a caption suited to the listing.
+            through the rooms in a natural sequence, adding cinematic camera motion and transitions,
+            then generates a caption suited to the listing.
           </p>
           <p className="mt-4 text-base leading-relaxed text-slate-300">
             It matters because listings with video consistently get more views and engagement than photo-only
@@ -214,7 +214,7 @@ export default function AiVideoForRealEstatePage() {
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             <Step n="Step 1" icon={Link2} title="Paste your listing link" desc="AI pulls in the photos, title, price, size and location from your existing listing — or upload your own property photos." />
-            <Step n="Step 2" icon={Camera} title="AI builds the walkthrough" desc="The property is sequenced room by room with camera movement, transitions and music, tailored to how many photos you provide." />
+            <Step n="Step 2" icon={Camera} title="AI builds the walkthrough" desc="The property is sequenced room by room with camera movement and transitions, tailored to how many photos you provide." />
             <Step n="Step 3" icon={Megaphone} title="Publish or download" desc="Share directly to your social channels, embed on your listing page, or download in 9:16, 1:1 or 16:9 for wherever you market the property." />
           </div>
         </div>

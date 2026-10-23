@@ -32,7 +32,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "SoMe AI Video: Skab AI-genereret video til sociale medier",
     description:
-      "Forvandl et link eller billeder til en fængende social video på minutter — tilpasset Instagram, TikTok, Facebook og LinkedIn med AI-kamerabevægelser, musik og tekst.",
+      "Forvandl et link eller billeder til en fængende social video på minutter — tilpasset Instagram, TikTok, Facebook og LinkedIn med AI-kamerabevægelser og tekst.",
     type: "website",
     siteName: "somevideopost.com",
     locale: "da_DK",
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
 const FAQ = [
   {
     q: "Hvad er SoMe AI video?",
-    a: "\"SoMe\" (sociale medier) AI video er videoindhold, der genereres automatisk af kunstig intelligens til platforme som Instagram, TikTok, Facebook og LinkedIn. På somevideopost.com indsætter du et link eller uploader billeder, og AI tilføjer kamerabevægelser, overgange, musik og en tekst — og skaber en klar-til-deling video uden filmning eller redigering.",
+    a: "\"SoMe\" (sociale medier) AI video er videoindhold, der genereres automatisk af kunstig intelligens til platforme som Instagram, TikTok, Facebook og LinkedIn. På somevideopost.com indsætter du et link eller uploader billeder, og AI tilføjer kamerabevægelser, overgange og en tekst — og skaber en klar-til-deling video uden filmning eller redigering.",
   },
   {
     q: "Hvordan adskiller SoMe AI video sig fra en skabelonvideo?",
@@ -55,7 +55,7 @@ const FAQ = [
   },
   {
     q: "Skal jeg kunne redigere video?",
-    a: "Nej. Hele pointen med SoMe AI video er, at du ikke rører en tidslinje eller redigeringssoftware. Du leverer input — et link eller billeder — og AI klarer valg af klip, bevægelse, musik og tekst automatisk.",
+    a: "Nej. Hele pointen med SoMe AI video er, at du ikke rører en tidslinje eller redigeringssoftware. Du leverer input — et link eller billeder — og AI klarer valg af klip, bevægelse og tekst automatisk.",
   },
   {
     q: "Kan jeg generere en SoMe AI video gratis?",
@@ -110,7 +110,7 @@ export default function SomeAiVideoDaPage() {
       featureList: [
         "AI-genereret video fra et link eller uploadede billeder",
         "9:16, 1:1 og 16:9 eksport til hver platform",
-        "Automatiske kamerabevægelser, overgange og musik",
+        "Automatiske kamerabevægelser og overgange",
         "AI-skrevne tekster per platform",
         "Direkte publicering til Facebook, Instagram, TikTok, LinkedIn og YouTube",
       ],
@@ -155,7 +155,7 @@ export default function SomeAiVideoDaPage() {
           <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-slate-300">
             SoMe AI video står for &ldquo;social media AI video&rdquo; — videoindhold som AI skaber for dig automatisk,
             klar til Instagram, TikTok, Facebook og LinkedIn. Indsæt et link eller upload billeder, og somevideopost.com
-            bygger et cinematisk klip med bevægelse, musik og tekst på minutter. Ingen filmning, ingen redigering.
+            bygger et cinematisk klip med bevægelse og tekst på minutter. Ingen filmning, ingen redigering.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link href="/signup" className="inline-flex items-center justify-center gap-2 rounded-xl px-7 py-3.5 text-sm font-bold text-white shadow-[0_0_30px_rgba(255,107,74,0.35)] transition-opacity hover:opacity-90" style={{ background: ORANGE_GRADIENT }}>
@@ -177,7 +177,7 @@ export default function SomeAiVideoDaPage() {
             sociale medier — i modsætning til en video, du selv filmer og redigerer. I stedet for at hyre en
             videofotograf eller lære et redigeringsprogram giver du somevideopost.com et udgangspunkt (et annoncelink
             eller et sæt billeder), og AI klarer det kreative arbejde: vælger rækkefølge af klip, tilføjer
-            kamerabevægelser og overgange, lægger musik under og skriver en tekst tilpasset den platform, du poster til.
+            kamerabevægelser og overgange og skriver en tekst tilpasset den platform, du poster til.
           </p>
           <p className="mt-4 text-base leading-relaxed text-slate-300">
             Det findes, fordi sociale medier belønner video frem for statiske billeder — Reels, TikTok og Shorts får
@@ -202,7 +202,7 @@ export default function SomeAiVideoDaPage() {
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             <Step n="Trin 1" icon={Link2} title="Indsæt link eller upload billeder" desc="Peg somevideopost.com på din annonce, produktside eller nogle få billeder. AI henter billeder og nøgledetaljer automatisk." />
-            <Step n="Trin 2" icon={Sparkles} title="AI genererer videoen" desc="Kamerabevægelser, overgange, baggrundsmusik og en platformstilpasset tekst tilføjes automatisk — du kan forhåndsvise, før du låser den op." />
+            <Step n="Trin 2" icon={Sparkles} title="AI genererer videoen" desc="Kamerabevægelser, overgange og en platformstilpasset tekst tilføjes automatisk — du kan forhåndsvise, før du låser den op." />
             <Step n="Trin 3" icon={Share2} title="Publicer eller download" desc="Del direkte til Facebook, Instagram, TikTok, LinkedIn og YouTube fra dashboardet, planlæg til senere, eller download i det format, du har brug for." />
           </div>
         </div>
@@ -236,7 +236,7 @@ export default function SomeAiVideoDaPage() {
             <BenefitCard icon={Clock} title="Minutter, ikke dage" desc="Ingen shoot at planlægge, ingen editor at briefe. Gå fra et link eller billeder til en færdig video i ét hug." accent="bg-orange-500/15 text-orange-400" />
             <BenefitCard icon={TrendingUp} title="Video slår billeder" desc="Reels, TikTok og Shorts overgår typisk statiske opslag — AI-video lader dig poste video hver gang, ikke kun ind imellem." accent="bg-emerald-500/15 text-emerald-400" />
             <BenefitCard icon={Share2} title="Ét aktiv, fem kanaler" desc="Den samme genererede video eksporteres og deles til Facebook, Instagram, TikTok, LinkedIn og YouTube fra ét dashboard." accent="bg-blue-500/15 text-blue-400" />
-            <BenefitCard icon={Wand2} title="Ingen redigeringskompetencer nødvendige" desc="AI klarer tempo, overgange og musik, så alle i teamet kan publicere video, der ser professionel ud." accent="bg-violet-500/15 text-violet-400" />
+            <BenefitCard icon={Wand2} title="Ingen redigeringskompetencer nødvendige" desc="AI klarer tempo, overgange og kamerabevægelser, så alle i teamet kan publicere video, der ser professionel ud." accent="bg-violet-500/15 text-violet-400" />
             <BenefitCard icon={Video} title="Konsekvent output" desc="Hver video følger samme kvalitetsniveau, så din feed ser sammenhængende ud, selv når flere personer poster." accent="bg-pink-500/15 text-pink-400" />
             <BenefitCard icon={Megaphone} title="Tekst inkluderet" desc="AI skriver en tekst, der matcher videoen og platformen, så et opslag er klart — ikke halvfærdigt — i samme øjeblik videoen er." accent="bg-yellow-500/15 text-yellow-400" />
           </div>

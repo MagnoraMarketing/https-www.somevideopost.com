@@ -44,7 +44,7 @@ export const metadata: Metadata = {
 const FAQ = [
   {
     q: "Hvad er AI video til boliger?",
-    a: "AI video til boliger er en præsentationsvideo, der genereres automatisk fra en boligannonce eller billeder, i stedet for at blive filmet af en videofotograf. somevideopost.com læser dit annoncelink eller uploadede billeder og bygger en cinematisk video med kamerabevægelser, rum-for-rum-flow, overgange og musik — klar på minutter.",
+    a: "AI video til boliger er en præsentationsvideo, der genereres automatisk fra en boligannonce eller billeder, i stedet for at blive filmet af en videofotograf. somevideopost.com læser dit annoncelink eller uploadede billeder og bygger en cinematisk video med kamerabevægelser, rum-for-rum-flow og overgange — klar på minutter.",
   },
   {
     q: "Kan jeg bruge mine eksisterende annoncebilleder?",
@@ -160,7 +160,7 @@ export default function AiVideoForRealEstateDaPage() {
               </h1>
               <p className="mt-5 max-w-lg text-base leading-relaxed text-slate-300">
                 AI video til boliger forvandler et annoncelink eller et sæt boligbilleder til en professionel
-                præsentationsvideo — med kamerabevægelser, rum-for-rum-flow og musik — på under 15 minutter.
+                præsentationsvideo — med kamerabevægelser og rum-for-rum-flow — på under 15 minutter.
                 Ingen videofotograf, ingen redigeringssoftware, ingen ventedage på et shoot.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -187,7 +187,7 @@ export default function AiVideoForRealEstateDaPage() {
             AI video til boliger er en boligpræsentationsvideo, der skabes automatisk af kunstig intelligens i
             stedet for et kamerahold. Du giver somevideopost.com et annoncelink eller uploader billeder af
             boligen, og AI bygger en video, der bevæger sig gennem rummene i en naturlig rækkefølge, tilføjer
-            cinematiske kamerabevægelser, overgange og baggrundsmusik, og genererer derefter en tekst tilpasset annoncen.
+            cinematiske kamerabevægelser og overgange, og genererer derefter en tekst tilpasset annoncen.
           </p>
           <p className="mt-4 text-base leading-relaxed text-slate-300">
             Det betyder noget, fordi annoncer med video konsekvent får flere visninger og mere engagement end
@@ -209,7 +209,7 @@ export default function AiVideoForRealEstateDaPage() {
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             <Step n="Trin 1" icon={Link2} title="Indsæt dit annoncelink" desc="AI henter billeder, titel, pris, størrelse og beliggenhed fra din eksisterende annonce — eller upload dine egne boligbilleder." />
-            <Step n="Trin 2" icon={Camera} title="AI bygger walkthroughen" desc="Boligen sekventeres rum for rum med kamerabevægelser, overgange og musik, tilpasset hvor mange billeder du leverer." />
+            <Step n="Trin 2" icon={Camera} title="AI bygger walkthroughen" desc="Boligen sekventeres rum for rum med kamerabevægelser og overgange, tilpasset hvor mange billeder du leverer." />
             <Step n="Trin 3" icon={Megaphone} title="Publicer eller download" desc="Del direkte til dine sociale kanaler, indlejr på din annonceside, eller download i 9:16, 1:1 eller 16:9 til, hvor du markedsfører boligen." />
           </div>
         </div>

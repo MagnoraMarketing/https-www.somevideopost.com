@@ -185,7 +185,7 @@ export default function AiVideoForApartmentEsPage() {
           <h2 className="text-3xl font-bold text-white md:text-4xl">¿Qué es el vídeo IA para apartamentos?</h2>
           <p className="mt-5 text-base leading-relaxed text-slate-300">
             Es un vídeo de presentación construido automáticamente con lo que ya tienes — fotos de la unidad o
-            un enlace a tu anuncio — con somevideopost.com añadiendo movimiento de cámara, transiciones y música
+            un enlace a tu anuncio — con somevideopost.com añadiendo movimiento de cámara y transiciones
             ajustados a los espacios interiores. En lugar de tomas exteriores o de dron, el ritmo se centra en
             cómo fluye realmente una distribución: entrada, salón, cocina, dormitorios y baño.
           </p>
@@ -208,7 +208,7 @@ export default function AiVideoForApartmentEsPage() {
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             <Step n="Paso 1" icon={Link2} title="Añade fotos o el enlace de un anuncio" desc="Sube fotos del interior de la unidad, o pega el enlace a un anuncio existente para que la IA las obtenga automáticamente." />
-            <Step n="Paso 2" icon={Sofa} title="La IA recorre la distribución" desc="El movimiento de cámara y las transiciones se secuencian habitación por habitación — salón, cocina, dormitorios, baño — con música añadida automáticamente." />
+            <Step n="Paso 2" icon={Sofa} title="La IA recorre la distribución" desc="El movimiento de cámara y las transiciones se secuencian habitación por habitación — salón, cocina, dormitorios, baño — todo automáticamente." />
             <Step n="Paso 3" icon={DoorOpen} title="Publica o descarga" desc="Comparte directamente en tus redes sociales, o descárgalo en el formato que necesites para tu página de alquiler o portal." />
           </div>
         </div>
