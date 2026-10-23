@@ -295,7 +295,7 @@ export const LANDING: Record<Locale, LandingT> = {
     demoRoom1: "Facade", demoRoom2: "Stue", demoRoom3: "Soveværelse", demoRoom4: "Terrasse",
     demoPostLabel: "AI OPSLAG",
     demoShareTitle: "Del med ét klik", demoShared: "Delt!",
-    demoSampleText: "🏖️ Strandnær villa i Alicante — 3 soveværelser, privat pool og havudsigt. Perfekt til 6 gæster. Book dit sommereventyr nu! 🌊",
+    demoSampleText: "☀️ Tag en rundtur i vores feriebolig i Spanien — se rummene, mærk stemningen, og book dit næste ophold direkte. 🌊",
   },
   en: {
     navHome: "Home", navFeatures: "Features", navVideo: "Video", navPricing: "Pricing",
@@ -362,7 +362,7 @@ export const LANDING: Record<Locale, LandingT> = {
     demoRoom1: "Facade", demoRoom2: "Living room", demoRoom3: "Bedroom", demoRoom4: "Terrace",
     demoPostLabel: "AI POST",
     demoShareTitle: "Share with one click", demoShared: "Shared!",
-    demoSampleText: "🏖️ Beachfront villa in Alicante — 3 bedrooms, private pool & sea views. Perfect for 6 guests. Book your summer adventure now! 🌊",
+    demoSampleText: "☀️ Take a tour of our holiday home in Spain — see the rooms, feel the atmosphere and book your next stay directly. 🌊",
   },
   es: {
     navHome: "Inicio", navFeatures: "Características", navVideo: "Vídeo", navPricing: "Precios",
@@ -429,7 +429,7 @@ export const LANDING: Record<Locale, LandingT> = {
     demoRoom1: "Fachada", demoRoom2: "Salón", demoRoom3: "Dormitorio", demoRoom4: "Terraza",
     demoPostLabel: "PUBLICACIÓN IA",
     demoShareTitle: "Comparte con un clic", demoShared: "¡Compartido!",
-    demoSampleText: "🏖️ Villa en primera línea de playa en Alicante — 3 dormitorios, piscina privada y vistas al mar. Perfecta para 6 huéspedes. ¡Reserva ya tu aventura de verano! 🌊",
+    demoSampleText: "☀️ Recorre nuestra casa vacacional en España — mira las estancias, siente el ambiente y reserva tu próxima estancia directamente. 🌊",
   },
   de: {
     navHome: "Startseite", navFeatures: "Funktionen", navVideo: "Video", navPricing: "Preise",
@@ -496,6 +496,6 @@ export const LANDING: Record<Locale, LandingT> = {
     demoRoom1: "Fassade", demoRoom2: "Wohnzimmer", demoRoom3: "Schlafzimmer", demoRoom4: "Terrasse",
     demoPostLabel: "KI-BEITRAG",
     demoShareTitle: "Mit einem Klick teilen", demoShared: "Geteilt!",
-    demoSampleText: "🏖️ Strandvilla in Alicante — 3 Schlafzimmer, privater Pool und Meerblick. Perfekt für 6 Gäste. Buche jetzt dein Sommererlebnis! 🌊",
+    demoSampleText: "☀️ Mach einen Rundgang durch unser Ferienhaus in Spanien — sieh dir die Räume an, spür die Atmosphäre und buche deinen nächsten Aufenthalt direkt. 🌊",
   },
 };
