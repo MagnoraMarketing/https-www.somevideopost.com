@@ -49,7 +49,7 @@ const FAQ = [
   },
   {
     q: "Hvor hurtigt er en AI-video klar?",
-    a: "De fleste præsentationsvideoer er færdige på under 15 minutter. Du indsætter blot et boliglink eller uploader dine fotos, vælger stil, og AI genererer video med kamerabevægelser, overgange og musik, mens du følger fremdriften live i dashboardet.",
+    a: "De fleste præsentationsvideoer er færdige på under 15 minutter. Du indsætter blot et boliglink eller uploader dine fotos, vælger stil, og AI genererer video med kamerabevægelser og overgange, mens du følger fremdriften live i dashboardet.",
   },
   {
     q: "Kan jeg dele direkte på Facebook, Instagram, TikTok og LinkedIn?",
@@ -246,7 +246,7 @@ export default function WhySomeVideoPostPage() {
               </span>
               <h2 className="text-3xl font-bold text-white md:text-4xl">Professionelle boligvideoer — uden en fotograf</h2>
               <p className="mt-4 text-base leading-relaxed text-slate-300">
-                AI tilføjer flydende kamerabevægelser, cinematiske overgange og baggrundsmusik til dine
+                AI tilføjer flydende kamerabevægelser, og cinematiske overgange til dine
                 billeder og skaber en betagende præsentationsvideo på minutter. Du følger fremdriften live i
                 dashboardet — fra “AI genererer” til “Klar”.
               </p>
@@ -254,7 +254,7 @@ export default function WhySomeVideoPostPage() {
                 {[
                   "Cinematiske kamerabevægelser og overgange automatisk",
                   "9:16 optimeret til Reels, TikTok og Shorts",
-                  "Baggrundsmusik og tekst tilpasset boligen",
+                  "Tekst tilpasset boligen",
                   "Leveret direkte i appen, klar til deling",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-2 text-sm text-slate-300">

@@ -238,7 +238,7 @@ export const POSTS: BlogPost[] = [
     id: 18,
     category: "video-marketing",
     title: "Cinematisk video af din bolig: fra billeder til færdig film på 15 min",
-    excerpt: "Upload dine boligfotos — AI tilføjer professionelle kamerabevægelser, flydende overgange og musik. Videoen leveres direkte i appen klar til deling.",
+    excerpt: "Upload dine boligfotos — AI tilføjer professionelle kamerabevægelser og flydende overgange. Videoen leveres direkte i appen klar til deling.",
     readTime: "4 min",
     date: "2025-09-01",
     type: "VIDEO GEN",
@@ -780,7 +780,7 @@ export const POSTS: BlogPost[] = [
       {
         heading: "Hvad AI-video ændrer",
         paragraphs: [
-          "AI-genereret video fjerner både prisen for en fotograf og ventetiden. Du bruger de billeder, du allerede har — eller henter dem automatisk fra din eksisterende annonce — og AI tilføjer kamerabevægelser, overgange og musik. Resultatet er klar på under 15 minutter i stedet for uger.",
+          "AI-genereret video fjerner både prisen for en fotograf og ventetiden. Du bruger de billeder, du allerede har — eller henter dem automatisk fra din eksisterende annonce — og AI tilføjer kamerabevægelser og overgange. Resultatet er klar på under 15 minutter i stedet for uger.",
           "Kvaliteten er ikke identisk med en professionel dronefilm af en luksusvilla, men til det formål de fleste udlejere har brug for — et engagerende klip til sociale medier og annoncer — er forskellen minimal, mens prisen og ventetiden er markant lavere.",
         ],
       },
@@ -821,7 +821,7 @@ export const POSTS: BlogPost[] = [
       {
         heading: "Trin 3: Se din video bygge sig selv",
         paragraphs: [
-          "AI tilføjer kamerabevægelser, overgange og musik og bygger en cinematisk video ud fra dine billeder, mens du følger fremdriften live i dashboardet. Du kan se en vandmærket forhåndsvisning af den fulde video, helt gratis.",
+          "AI tilføjer kamerabevægelser og overgange og bygger en cinematisk video ud fra dine billeder, mens du følger fremdriften live i dashboardet. Du kan se en vandmærket forhåndsvisning af den fulde video, helt gratis.",
         ],
       },
       {

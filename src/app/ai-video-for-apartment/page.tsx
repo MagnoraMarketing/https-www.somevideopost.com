@@ -189,8 +189,8 @@ export default function AiVideoForApartmentPage() {
           <h2 className="text-3xl font-bold text-white md:text-4xl">What is AI video for apartments?</h2>
           <p className="mt-5 text-base leading-relaxed text-slate-300">
             AI video for apartments is a presentation video built automatically from what you already have — photos
-            of the unit or a link to your listing — with somevideopost.com adding camera movement, transitions and
-            music tuned to interior spaces. Rather than exterior shots and drone footage, the pacing focuses on how a
+            of the unit or a link to your listing — with somevideopost.com adding camera movement and transitions
+            tuned to interior spaces. Rather than exterior shots and drone footage, the pacing focuses on how a
             layout actually flows: entrance, living room, kitchen, bedrooms and bathroom.
           </p>
           <p className="mt-4 text-base leading-relaxed text-slate-300">
@@ -212,7 +212,7 @@ export default function AiVideoForApartmentPage() {
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             <Step n="Step 1" icon={Link2} title="Add photos or a listing link" desc="Upload interior photos of the unit, or paste a link to an existing listing so AI can pull them in automatically." />
-            <Step n="Step 2" icon={Sofa} title="AI flows through the layout" desc="Camera movement and transitions are sequenced room by room — living space, kitchen, bedrooms, bathroom — with music added automatically." />
+            <Step n="Step 2" icon={Sofa} title="AI flows through the layout" desc="Camera movement and transitions are sequenced room by room — living space, kitchen, bedrooms, bathroom — all automatically." />
             <Step n="Step 3" icon={DoorOpen} title="Publish or download" desc="Share to your social channels directly, or download in the format you need for your rental listing page or portal." />
           </div>
         </div>

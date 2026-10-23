@@ -50,7 +50,7 @@ const FAQ = [
   },
   {
     q: "Wie schnell ist ein KI-Video fertig?",
-    a: "Die meisten Präsentationsvideos sind in unter 15 Minuten fertig. Du fügst einfach einen Immobilienlink ein oder lädst deine Fotos hoch, wählst einen Stil, und die KI generiert ein Video mit Kamerabewegungen, Übergängen und Musik, während du den Fortschritt live im Dashboard verfolgst.",
+    a: "Die meisten Präsentationsvideos sind in unter 15 Minuten fertig. Du fügst einfach einen Immobilienlink ein oder lädst deine Fotos hoch, wählst einen Stil, und die KI generiert ein Video mit Kamerabewegungen und Übergängen, während du den Fortschritt live im Dashboard verfolgst.",
   },
   {
     q: "Kann ich direkt auf Facebook, Instagram, TikTok und LinkedIn teilen?",
@@ -246,7 +246,7 @@ export default function WhySomeVideoPostDePage() {
               </span>
               <h2 className="text-3xl font-bold text-white md:text-4xl">Professionelle Immobilienvideos — ohne Fotografen</h2>
               <p className="mt-4 text-base leading-relaxed text-slate-300">
-                Die KI fügt deinen Fotos flüssige Kamerabewegungen, kinematische Übergänge und Hintergrundmusik
+                Die KI fügt deinen Fotos flüssige Kamerabewegungen und kinematische Übergänge
                 hinzu und erstellt in Minuten ein beeindruckendes Präsentationsvideo. Du verfolgst den
                 Fortschritt live im Dashboard — von &ldquo;KI generiert&rdquo; bis &ldquo;Fertig&rdquo;.
               </p>
@@ -254,7 +254,7 @@ export default function WhySomeVideoPostDePage() {
                 {[
                   "Kinematische Kamerabewegungen und Übergänge automatisch",
                   "9:16 optimiert für Reels, TikTok und Shorts",
-                  "Hintergrundmusik und Text passend zur Immobilie",
+                  "Text passend zur Immobilie",
                   "Direkt in der App geliefert, bereit zum Teilen",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-2 text-sm text-slate-300">

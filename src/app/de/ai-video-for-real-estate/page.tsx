@@ -44,7 +44,7 @@ export const metadata: Metadata = {
 const FAQ = [
   {
     q: "Was ist KI-Video für Immobilien?",
-    a: "KI-Video für Immobilien ist ein Präsentationsvideo, das automatisch aus einem Immobilieninserat oder Fotos erstellt wird, statt von einem Videoteam gefilmt zu werden. somevideopost.com liest deinen Inseratslink oder hochgeladene Fotos und baut ein kinematisches Video mit Kamerabewegungen, Raum-für-Raum-Ablauf, Übergängen und Musik — fertig in Minuten.",
+    a: "KI-Video für Immobilien ist ein Präsentationsvideo, das automatisch aus einem Immobilieninserat oder Fotos erstellt wird, statt von einem Videoteam gefilmt zu werden. somevideopost.com liest deinen Inseratslink oder hochgeladene Fotos und baut ein kinematisches Video mit Kamerabewegungen, Raum-für-Raum-Ablauf und Übergängen — fertig in Minuten.",
   },
   {
     q: "Kann ich meine vorhandenen Inseratsfotos nutzen?",
@@ -160,7 +160,7 @@ export default function AiVideoForRealEstateDePage() {
               </h1>
               <p className="mt-5 max-w-lg text-base leading-relaxed text-slate-300">
                 KI-Video für Immobilien verwandelt einen Inseratslink oder ein Set von Immobilienfotos in ein
-                professionelles Präsentationsvideo — mit Kamerabewegung, Raum-für-Raum-Ablauf und Musik — in
+                professionelles Präsentationsvideo — mit Kamerabewegung und Raum-für-Raum-Ablauf — in
                 unter 15 Minuten. Kein Videograf, keine Schnittsoftware, kein tagelanges Warten auf ein Shooting.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -187,7 +187,7 @@ export default function AiVideoForRealEstateDePage() {
             Es ist ein Immobilien-Präsentationsvideo, das automatisch von künstlicher Intelligenz statt einem
             Kamerateam erstellt wird. Du gibst somevideopost.com einen Inseratslink oder lädst Fotos der
             Immobilie hoch, und die KI baut ein Video, das sich in einer natürlichen Abfolge durch die Räume
-            bewegt, kinematische Kamerabewegung, Übergänge und Hintergrundmusik hinzufügt und dann einen zum
+            bewegt, kinematische Kamerabewegung und Übergänge hinzufügt und dann einen zum
             Inserat passenden Text erstellt.
           </p>
           <p className="mt-4 text-base leading-relaxed text-slate-300">
@@ -210,7 +210,7 @@ export default function AiVideoForRealEstateDePage() {
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             <Step n="Schritt 1" icon={Link2} title="Inseratslink einfügen" desc="Die KI holt Fotos, Titel, Preis, Größe und Lage aus deinem bestehenden Inserat — oder lade deine eigenen Immobilienfotos hoch." />
-            <Step n="Schritt 2" icon={Camera} title="KI erstellt den Rundgang" desc="Die Immobilie wird Raum für Raum mit Kamerabewegung, Übergängen und Musik sequenziert, angepasst an die Anzahl der bereitgestellten Fotos." />
+            <Step n="Schritt 2" icon={Camera} title="KI erstellt den Rundgang" desc="Die Immobilie wird Raum für Raum mit Kamerabewegung und Übergängen sequenziert, angepasst an die Anzahl der bereitgestellten Fotos." />
             <Step n="Schritt 3" icon={Megaphone} title="Veröffentlichen oder herunterladen" desc="Teile direkt auf deinen sozialen Kanälen, binde es auf deiner Inseratsseite ein, oder lade es in 9:16, 1:1 oder 16:9 herunter, wo immer du die Immobilie vermarktest." />
           </div>
         </div>

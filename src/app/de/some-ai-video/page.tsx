@@ -32,7 +32,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "KI-Video für Social Media: KI-generiertes Video erstellen",
     description:
-      "Verwandle einen Link oder Fotos in Minuten in ein fesselndes Social-Video — passend für Instagram, TikTok, Facebook und LinkedIn, mit KI-Kamerabewegungen, Musik und Text.",
+      "Verwandle einen Link oder Fotos in Minuten in ein fesselndes Social-Video — passend für Instagram, TikTok, Facebook und LinkedIn, mit KI-Kamerabewegungen und Text.",
     type: "website",
     siteName: "somevideopost.com",
     locale: "de_DE",
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
 const FAQ = [
   {
     q: "Was ist KI-Video für Social Media?",
-    a: "KI-Video für Social Media ist Videoinhalt, der automatisch von künstlicher Intelligenz für Plattformen wie Instagram, TikTok, Facebook und LinkedIn erstellt wird. Auf somevideopost.com fügst du einen Link ein oder lädst Fotos hoch, und die KI fügt Kamerabewegungen, Übergänge, Musik und einen Text hinzu — und erstellt so ein postfertiges Video ohne Filmen oder Schneiden.",
+    a: "KI-Video für Social Media ist Videoinhalt, der automatisch von künstlicher Intelligenz für Plattformen wie Instagram, TikTok, Facebook und LinkedIn erstellt wird. Auf somevideopost.com fügst du einen Link ein oder lädst Fotos hoch, und die KI fügt Kamerabewegungen, Übergänge und einen Text hinzu — und erstellt so ein postfertiges Video ohne Filmen oder Schneiden.",
   },
   {
     q: "Wie unterscheidet es sich von einem Vorlagenvideo?",
@@ -55,7 +55,7 @@ const FAQ = [
   },
   {
     q: "Muss ich Video bearbeiten können?",
-    a: "Nein. Der ganze Sinn von KI-Video für Social Media ist, dass du keine Zeitleiste oder Schnittsoftware anfasst. Du lieferst den Input — einen Link oder Fotos — und die KI übernimmt Auswahl der Einstellungen, Bewegung, Musik und Text automatisch.",
+    a: "Nein. Der ganze Sinn von KI-Video für Social Media ist, dass du keine Zeitleiste oder Schnittsoftware anfasst. Du lieferst den Input — einen Link oder Fotos — und die KI übernimmt Auswahl der Einstellungen, Bewegung und Text automatisch.",
   },
   {
     q: "Kann ich ein KI-Video für Social Media kostenlos erstellen?",
@@ -110,7 +110,7 @@ export default function SomeAiVideoDePage() {
       featureList: [
         "KI-generiertes Video aus einem Link oder hochgeladenen Fotos",
         "9:16-, 1:1- und 16:9-Export für jede Plattform",
-        "Automatische Kamerabewegungen, Übergänge und Musik",
+        "Automatische Kamerabewegungen und Übergänge",
         "KI-geschriebene Texte pro Plattform",
         "Direkte Veröffentlichung auf Facebook, Instagram, TikTok, LinkedIn und YouTube",
       ],
@@ -155,7 +155,7 @@ export default function SomeAiVideoDePage() {
           <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-slate-300">
             KI-Video für Social Media ist Videoinhalt, den die KI automatisch für dich erstellt, bereit für
             Instagram, TikTok, Facebook und LinkedIn. Füge einen Link ein oder lade Fotos hoch, und
-            somevideopost.com baut in Minuten einen kinematischen Clip mit Bewegung, Musik und Text. Kein Filmen, kein Schneiden.
+            somevideopost.com baut in Minuten einen kinematischen Clip mit Bewegung und Text. Kein Filmen, kein Schneiden.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link href="/signup" className="inline-flex items-center justify-center gap-2 rounded-xl px-7 py-3.5 text-sm font-bold text-white shadow-[0_0_30px_rgba(255,107,74,0.35)] transition-opacity hover:opacity-90" style={{ background: ORANGE_GRADIENT }}>
@@ -177,7 +177,7 @@ export default function SomeAiVideoDePage() {
             Social-Media-Feeds — im Gegensatz zu einem Video, das du selbst filmst und schneidest. Statt einen
             Videografen zu engagieren oder eine Schnitt-App zu lernen, gibst du somevideopost.com einen
             Ausgangspunkt (einen Inseratslink oder ein Fotoset), und die KI übernimmt die kreative Arbeit: wählt
-            die Reihenfolge der Einstellungen, fügt Kamerabewegungen und Übergänge hinzu, unterlegt Musik und
+            die Reihenfolge der Einstellungen, fügt Kamerabewegungen und Übergänge hinzu und
             schreibt einen Text, der zur Plattform passt, auf der du postest.
           </p>
           <p className="mt-4 text-base leading-relaxed text-slate-300">
@@ -203,7 +203,7 @@ export default function SomeAiVideoDePage() {
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             <Step n="Schritt 1" icon={Link2} title="Link einfügen oder Fotos hochladen" desc="Richte somevideopost.com auf dein Inserat, deine Produktseite oder ein paar Fotos. Die KI holt Bilder und wichtige Details automatisch." />
-            <Step n="Schritt 2" icon={Sparkles} title="KI erstellt das Video" desc="Kamerabewegungen, Übergänge, Hintergrundmusik und ein plattformgerechter Text werden automatisch hinzugefügt — du kannst eine Vorschau ansehen, bevor du dich zum Freischalten entscheidest." />
+            <Step n="Schritt 2" icon={Sparkles} title="KI erstellt das Video" desc="Kamerabewegungen, Übergänge und ein plattformgerechter Text werden automatisch hinzugefügt — du kannst eine Vorschau ansehen, bevor du dich zum Freischalten entscheidest." />
             <Step n="Schritt 3" icon={Share2} title="Veröffentlichen oder herunterladen" desc="Teile direkt auf Facebook, Instagram, TikTok, LinkedIn und YouTube vom Dashboard aus, plane es für später, oder lade es im benötigten Format herunter." />
           </div>
         </div>
@@ -237,7 +237,7 @@ export default function SomeAiVideoDePage() {
             <BenefitCard icon={Clock} title="Minuten, nicht Tage" desc="Kein Shooting zu planen, kein Editor zu briefen. Vom Link oder Fotos zum fertigen Video in einem Rutsch." accent="bg-orange-500/15 text-orange-400" />
             <BenefitCard icon={TrendingUp} title="Video schlägt Fotos" desc="Reels, TikTok und Shorts übertreffen statische Beiträge regelmäßig — mit KI-Video postest du jedes Mal Video, nicht nur gelegentlich." accent="bg-emerald-500/15 text-emerald-400" />
             <BenefitCard icon={Share2} title="Ein Asset, fünf Kanäle" desc="Dasselbe generierte Video wird exportiert und von einem Dashboard aus auf Facebook, Instagram, TikTok, LinkedIn und YouTube geteilt." accent="bg-blue-500/15 text-blue-400" />
-            <BenefitCard icon={Wand2} title="Keine Schnittkenntnisse nötig" desc="Die KI übernimmt Tempo, Übergänge und Musik, sodass jeder im Team professionell aussehendes Video veröffentlichen kann." accent="bg-violet-500/15 text-violet-400" />
+            <BenefitCard icon={Wand2} title="Keine Schnittkenntnisse nötig" desc="Die KI übernimmt Tempo, Übergänge und Kamerabewegungen, sodass jeder im Team professionell aussehendes Video veröffentlichen kann." accent="bg-violet-500/15 text-violet-400" />
             <BenefitCard icon={Video} title="Konsistentes Ergebnis" desc="Jedes Video folgt demselben Qualitätsniveau, sodass dein Feed einheitlich wirkt, auch wenn verschiedene Personen posten." accent="bg-pink-500/15 text-pink-400" />
             <BenefitCard icon={Megaphone} title="Text inklusive" desc="Die KI schreibt einen Text passend zu Video und Plattform, sodass ein Beitrag fertig ist — nicht halbfertig — sobald das Video es ist." accent="bg-yellow-500/15 text-yellow-400" />
           </div>

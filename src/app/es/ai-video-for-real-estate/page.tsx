@@ -44,7 +44,7 @@ export const metadata: Metadata = {
 const FAQ = [
   {
     q: "¿Qué es el vídeo IA inmobiliario?",
-    a: "El vídeo IA inmobiliario es un vídeo de presentación generado automáticamente a partir del anuncio o las fotos de una propiedad, en lugar de ser grabado por un equipo de vídeo. somevideopost.com lee el enlace de tu anuncio o las fotos subidas y construye un vídeo cinematográfico con movimiento de cámara, recorrido habitación por habitación, transiciones y música — listo en minutos.",
+    a: "El vídeo IA inmobiliario es un vídeo de presentación generado automáticamente a partir del anuncio o las fotos de una propiedad, en lugar de ser grabado por un equipo de vídeo. somevideopost.com lee el enlace de tu anuncio o las fotos subidas y construye un vídeo cinematográfico con movimiento de cámara, recorrido habitación por habitación y transiciones — listo en minutos.",
   },
   {
     q: "¿Puedo usar las fotos que ya tengo en el anuncio?",
@@ -161,7 +161,7 @@ export default function AiVideoForRealEstateEsPage() {
               <p className="mt-5 max-w-lg text-base leading-relaxed text-slate-300">
                 El vídeo IA inmobiliario convierte el enlace de un anuncio o un conjunto de fotos de una
                 propiedad en un vídeo de presentación profesional — con movimiento de cámara, recorrido
-                habitación por habitación y música — en menos de 15 minutos. Sin videógrafo, sin software de
+                habitación por habitación — en menos de 15 minutos. Sin videógrafo, sin software de
                 edición, sin días de espera para una sesión de fotos.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -188,7 +188,7 @@ export default function AiVideoForRealEstateEsPage() {
             Es un vídeo de presentación de la propiedad creado automáticamente por inteligencia artificial en
             lugar de un equipo de cámaras. Le das a somevideopost.com el enlace de un anuncio o subes fotos de
             la propiedad, y la IA construye un vídeo que recorre las habitaciones en una secuencia natural,
-            añadiendo movimiento de cámara cinematográfico, transiciones y música de fondo, y luego genera un
+            añadiendo movimiento de cámara cinematográfico y transiciones, y luego genera un
             texto adaptado al anuncio.
           </p>
           <p className="mt-4 text-base leading-relaxed text-slate-300">
@@ -211,7 +211,7 @@ export default function AiVideoForRealEstateEsPage() {
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             <Step n="Paso 1" icon={Link2} title="Pega el enlace de tu anuncio" desc="La IA obtiene las fotos, título, precio, tamaño y ubicación de tu anuncio existente — o sube tus propias fotos de la propiedad." />
-            <Step n="Paso 2" icon={Camera} title="La IA construye el recorrido" desc="La propiedad se secuencia habitación por habitación con movimiento de cámara, transiciones y música, adaptado al número de fotos que aportes." />
+            <Step n="Paso 2" icon={Camera} title="La IA construye el recorrido" desc="La propiedad se secuencia habitación por habitación con movimiento de cámara y transiciones, adaptado al número de fotos que aportes." />
             <Step n="Paso 3" icon={Megaphone} title="Publica o descarga" desc="Comparte directamente en tus redes sociales, insértalo en tu página de anuncio, o descárgalo en 9:16, 1:1 o 16:9 para donde comercialices la propiedad." />
           </div>
         </div>

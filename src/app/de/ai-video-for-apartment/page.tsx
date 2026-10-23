@@ -185,8 +185,8 @@ export default function AiVideoForApartmentDePage() {
           <h2 className="text-3xl font-bold text-white md:text-4xl">Was ist KI-Video für Wohnungen?</h2>
           <p className="mt-5 text-base leading-relaxed text-slate-300">
             Es ist ein Präsentationsvideo, das automatisch aus dem erstellt wird, was du bereits hast — Fotos
-            der Einheit oder ein Link zu deinem Inserat — wobei somevideopost.com Kamerabewegung, Übergänge und
-            Musik hinzufügt, die auf Innenräume abgestimmt sind. Statt Außenaufnahmen oder Drohnenaufnahmen
+            der Einheit oder ein Link zu deinem Inserat — wobei somevideopost.com Kamerabewegung und Übergänge
+            hinzufügt, die auf Innenräume abgestimmt sind. Statt Außenaufnahmen oder Drohnenaufnahmen
             konzentriert sich das Tempo darauf, wie ein Grundriss tatsächlich fließt: Eingang, Wohnzimmer,
             Küche, Schlafzimmer und Bad.
           </p>
@@ -209,7 +209,7 @@ export default function AiVideoForApartmentDePage() {
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             <Step n="Schritt 1" icon={Link2} title="Fotos oder einen Inseratslink hinzufügen" desc="Lade Innenaufnahmen der Einheit hoch, oder füge einen Link zu einem bestehenden Inserat ein, damit die KI sie automatisch holen kann." />
-            <Step n="Schritt 2" icon={Sofa} title="KI führt durch den Grundriss" desc="Kamerabewegung und Übergänge werden Raum für Raum sequenziert — Wohnbereich, Küche, Schlafzimmer, Bad — mit automatisch hinzugefügter Musik." />
+            <Step n="Schritt 2" icon={Sofa} title="KI führt durch den Grundriss" desc="Kamerabewegung und Übergänge werden Raum für Raum sequenziert — Wohnbereich, Küche, Schlafzimmer, Bad — ganz automatisch." />
             <Step n="Schritt 3" icon={DoorOpen} title="Veröffentlichen oder herunterladen" desc="Teile direkt auf deinen sozialen Kanälen, oder lade es im benötigten Format für deine Vermietungsseite oder dein Portal herunter." />
           </div>
         </div>

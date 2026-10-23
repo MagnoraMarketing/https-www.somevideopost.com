@@ -186,7 +186,7 @@ export default function AiVideoForApartmentDaPage() {
           <p className="mt-5 text-base leading-relaxed text-slate-300">
             AI video til lejligheder er en præsentationsvideo, der bygges automatisk ud fra det, du allerede har
             — billeder af lejligheden eller et link til din annonce — hvor somevideopost.com tilføjer
-            kamerabevægelser, overgange og musik tilpasset interiøret. I stedet for udendørs optagelser og
+            kamerabevægelser og overgange tilpasset interiøret. I stedet for udendørs optagelser og
             droneoptagelser fokuserer tempoet på, hvordan en planløsning faktisk flyder: entré, stue, køkken,
             soveværelser og badeværelse.
           </p>
@@ -209,7 +209,7 @@ export default function AiVideoForApartmentDaPage() {
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             <Step n="Trin 1" icon={Link2} title="Tilføj billeder eller et annoncelink" desc="Upload interiørbilleder af lejligheden, eller indsæt et link til en eksisterende annonce, så AI kan hente dem automatisk." />
-            <Step n="Trin 2" icon={Sofa} title="AI flyder gennem planløsningen" desc="Kamerabevægelser og overgange sekventeres rum for rum — opholdsrum, køkken, soveværelser, badeværelse — med musik tilføjet automatisk." />
+            <Step n="Trin 2" icon={Sofa} title="AI flyder gennem planløsningen" desc="Kamerabevægelser og overgange sekventeres rum for rum — opholdsrum, køkken, soveværelser, badeværelse — helt automatisk." />
             <Step n="Trin 3" icon={DoorOpen} title="Publicer eller download" desc="Del direkte til dine sociale kanaler, eller download i det format, du har brug for til din udlejningsside eller portal." />
           </div>
         </div>
