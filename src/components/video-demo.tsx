@@ -2,13 +2,14 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Sparkles, Loader2, CheckCircle2, ArrowRight, Link as LinkIcon, Volume2, VolumeX } from "lucide-react";
+import { DEMO_PROPERTY } from "@/lib/demo-property";
 
 type Stage = "idle" | "generating" | "done";
 
-// Sample presentation video shown in the demo phone once "generation" finishes.
-// A real AI-generated clip — illustrates the finished result.
-const DEMO_VIDEO_URL =
-  "https://r2.veo3ai.io/videos/ed952c81-3bcf-4d52-bdfc-f2c4a312f155-1080p-1785068502029.mp4";
+// Sample presentation video shown in the demo phone once "generation" finishes:
+// the demo property's own video (src/lib/demo-property.ts). Until there is
+// one, the neutral placeholder card below is shown instead.
+const DEMO_VIDEO_URL = DEMO_PROPERTY.videoUrl;
 
 const STEPS = [
   "Henter billeder fra din annonce...",
@@ -179,7 +180,7 @@ export function VideoDemo() {
           </div>
 
           {/* Real video preview in a phone mockup */}
-          {!videoError ? (
+          {DEMO_VIDEO_URL && !videoError ? (
             <div className="mb-4 flex justify-center">
               <div className="relative w-[190px] overflow-hidden rounded-[2rem] border-4 border-white/10 bg-black shadow-2xl">
                 <div className="pointer-events-none absolute left-1/2 top-2 z-10 h-4 w-16 -translate-x-1/2 rounded-full bg-black" />

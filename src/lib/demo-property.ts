@@ -46,6 +46,12 @@ export type DemoProperty = {
   /** E.g. "Privat pool", "Tagterrasse" — only what the listing states. */
   amenities: string[];
   photos: DemoPhoto[];
+  /**
+   * A finished presentation video of this property, made by our own
+   * pipeline. Null until one exists — the "Rigtig video" tab and the sample
+   * player stay hidden rather than showing footage of something else.
+   */
+  videoUrl: string | null;
 };
 
 export const DEMO_PROPERTY: DemoProperty = {
@@ -60,6 +66,7 @@ export const DEMO_PROPERTY: DemoProperty = {
   livingAreaM2: null,
   amenities: [],
   photos: [],
+  videoUrl: null,
 };
 
 /** Enough real photos to replace the neutral illustrations. */

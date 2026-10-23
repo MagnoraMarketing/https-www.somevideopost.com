@@ -5,6 +5,7 @@ import { Film, Compass } from "lucide-react";
 import type { Locale } from "@/lib/i18n";
 import { DemoVideoPhone } from "@/components/demo-video-phone";
 import { CinematicWalkthrough } from "@/components/walkthrough/cinematic-walkthrough";
+import { DEMO_PROPERTY } from "@/lib/demo-property";
 
 type View = "video" | "tour";
 
@@ -28,6 +29,16 @@ export function DemoPhoneSwitcher({
 }) {
   const [view, setView] = useState<View>("video");
   const l = LABELS[locale] ?? LABELS.da;
+
+  // Without a real video of the demo property there is nothing to toggle to:
+  // show the interactive tour on its own rather than unrelated footage.
+  if (!DEMO_PROPERTY.videoUrl) {
+    return (
+      <div className="flex w-full flex-col items-center gap-4">
+        <CinematicWalkthrough locale={locale} />
+      </div>
+    );
+  }
 
   return (
     <div className="flex w-full flex-col items-center gap-4">
