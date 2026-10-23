@@ -15,6 +15,7 @@ import { ScreenshotImporter } from "@/components/screenshot-importer";
 import { StyleSelector } from "@/components/video/style-selector";
 import { PriceRows } from "@/components/pricing/price-rows";
 import { DEFAULT_VIDEO_STYLE, type VideoStyleId } from "@/lib/video-styles";
+import { detailsFromScraped, type PropertyDetails } from "@/lib/property-details";
 
 const ROOM_LABELS = [
   "Stue", "Køkken", "Soveværelse", "Badeværelse", "Altan/Terrasse",
@@ -140,6 +141,85 @@ function PhotoTour({
   );
 }
 
+const FIELD_CLASS =
+  "w-full rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/10";
+
+/**
+ * The text and practical facts read from the listing, under the photos.
+ * Everything is editable; empty fields are simply not shown on the video.
+ */
+function ListingDetailsCard({
+  details,
+  onChange,
+}: {
+  details: PropertyDetails | null;
+  onChange: (details: PropertyDetails) => void;
+}) {
+  const current = details ?? emptyFormDetails();
+  const set = (patch: Partial<PropertyDetails>) => onChange({ ...current, ...patch });
+  const fromListing = !!details && (!!details.description || !!details.location || !!details.practicalNotes);
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+      <div>
+        <h3 className="text-base font-bold text-slate-900">5. Tekst og info om boligen</h3>
+        <p className="mt-1 text-sm text-slate-500">
+          {fromListing
+            ? "Hentet fra annoncen — ret til, hvis noget skal være anderledes. Vises sammen med videoen."
+            : "Hentes automatisk, når du indsætter et link. Du kan også skrive selv."}
+        </p>
+      </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-slate-700">Beliggenhed</label>
+          <input
+            type="text"
+            value={current.location ?? ""}
+            onChange={(e) => set({ location: e.target.value || null })}
+            placeholder="f.eks. Torrevieja, Costa Blanca"
+            className={FIELD_CLASS}
+          />
+        </div>
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-slate-700">Størrelse (m²)</label>
+          <input
+            type="number"
+            inputMode="numeric"
+            value={current.livingAreaM2 ?? ""}
+            onChange={(e) => set({ livingAreaM2: e.target.value === "" ? null : Number(e.target.value) })}
+            placeholder="f.eks. 85"
+            className={FIELD_CLASS}
+          />
+        </div>
+      </div>
+      <div>
+        <label className="mb-1.5 block text-sm font-medium text-slate-700">Beskrivelse</label>
+        <textarea
+          rows={6}
+          value={current.description ?? ""}
+          onChange={(e) => set({ description: e.target.value || null })}
+          placeholder="Hvad gør boligen særlig? Udsigt, pool, afstand til stranden …"
+          className={FIELD_CLASS}
+        />
+      </div>
+      <div>
+        <label className="mb-1.5 block text-sm font-medium text-slate-700">Praktiske oplysninger</label>
+        <textarea
+          rows={3}
+          value={current.practicalNotes ?? ""}
+          onChange={(e) => set({ practicalNotes: e.target.value || null })}
+          placeholder="Indtjekning, parkering, husregler …"
+          className={FIELD_CLASS}
+        />
+      </div>
+    </div>
+  );
+}
+
+function emptyFormDetails(): PropertyDetails {
+  return detailsFromScraped({});
+}
+
 export function NewVideoForm() {
   const searchParams = useSearchParams();
   const [title, setTitle] = useState("");
@@ -147,6 +227,9 @@ export function NewVideoForm() {
   // every searchParams change and overwrote whatever the user had typed.
   const [bookingUrl, setBookingUrl] = useState(() => searchParams.get("booking_url") ?? "");
   const [scraped, setScraped] = useState<ScrapedProperty | null>(null);
+  // The listing's text and facts, shown under the photos for the customer to
+  // check and edit; saved on the order and shown with the finished video.
+  const [details, setDetails] = useState<PropertyDetails | null>(null);
   // The listing URL the pipeline re-reads server-side to find the actual
   // property photographs — the preview above only shows what it found.
   const [sourceUrl, setSourceUrl] = useState("");
@@ -170,6 +253,7 @@ export function NewVideoForm() {
     if (result.error) { setImportError(result.error); return; }
     if (result.data) {
       setScraped(result.data);
+      setDetails(detailsFromScraped(result.data));
       setSourceUrl(importUrl.trim());
       if (result.data.title && !title) setTitle(result.data.title);
       if (!bookingUrl) setBookingUrl(importUrl.trim());
@@ -429,9 +513,13 @@ export function NewVideoForm() {
                   <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" multiple className="hidden" onChange={handleFileChange} />
                 </div>
 
-                {/* 5. Submit */}
+                {/* 5. Listing text */}
+                <ListingDetailsCard details={details} onChange={setDetails} />
+                {details && <input type="hidden" name="property_details" value={JSON.stringify(details)} />}
+
+                {/* 6. Submit */}
                 <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-                  <h3 className="text-base font-bold text-slate-900">5. Opret video</h3>
+                  <h3 className="text-base font-bold text-slate-900">6. Opret video</h3>
                   <button
                     type="submit"
                     disabled={!canSubmit}

@@ -3,7 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { readCachedProperty } from "@/services/property-import";
-import { detailsFromListing, sanitizeDetails, type PropertyDetails } from "@/lib/property-details";
+import { scrapePropertyUrl } from "@/services/scrape-property";
+import {
+  detailsAreEmpty, detailsFromListing, detailsFromScraped, sanitizeDetails, type PropertyDetails,
+} from "@/lib/property-details";
 
 /**
  * Server actions for the "Tekst & info" panel on the video page.
@@ -47,9 +50,9 @@ export async function savePropertyDetails(
 }
 
 /**
- * What the listing said when the video was made, for the customer to review
- * before saving. Read from the import cache only — the listing page itself
- * is never fetched again from here.
+ * What the listing says, for the customer to review before saving. Read from
+ * the import cache when an earlier import stored it; otherwise the listing
+ * is read once more with the same link reader the order form uses.
  */
 export async function loadListingDetails(orderId: string): Promise<{ details?: PropertyDetails; error?: string }> {
   const supabase = await createClient();
@@ -66,8 +69,15 @@ export async function loadListingDetails(orderId: string): Promise<{ details?: P
   if (!order.source_url) return { error: "Videoen er lavet fra uploadede billeder — der er ingen annonce at hente fra." };
 
   const property = await readCachedProperty(order.source_url);
-  if (!property) {
-    return { error: "Der er ingen gemte oplysninger fra annoncen. Udfyld felterne selv — de gemmes på videoen." };
+  if (property) {
+    const details = detailsFromListing(property);
+    if (!detailsAreEmpty(details)) return { details };
   }
-  return { details: detailsFromListing(property) };
+
+  const scraped = await scrapePropertyUrl(order.source_url);
+  const details = scraped.data ? detailsFromScraped(scraped.data) : null;
+  if (!details || detailsAreEmpty(details)) {
+    return { error: "Annoncen kunne ikke læses lige nu. Udfyld felterne selv — de gemmes på videoen." };
+  }
+  return { details };
 }

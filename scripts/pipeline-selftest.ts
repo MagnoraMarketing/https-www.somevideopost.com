@@ -34,7 +34,7 @@ import {
   type RecentOrder,
 } from "@/lib/video-job-policy";
 import { summariseVideoOps } from "@/lib/video-ops-stats";
-import { detailsAreEmpty, detailsFromListing, emptyDetails, sanitizeDetails } from "@/lib/property-details";
+import { detailsAreEmpty, detailsFromListing, detailsFromScraped, emptyDetails, sanitizeDetails } from "@/lib/property-details";
 import { isStale, STALE_AFTER_HOURS } from "@/services/video/driver";
 import { renderLockedPreview } from "@/services/video/assembler";
 import { execFileSync } from "child_process";
@@ -377,6 +377,16 @@ check("errors grouped", stats.topErrors.length === 1 && stats.topErrors[0].count
 
 // ── 12. Property details panel ────────────────────────────────────────────
 section("Property details");
+const fromLink = detailsFromScraped({
+  title: "Lejlighed med havudsigt", location: "Torrevieja", size: "85 m²",
+  description: "Lys lejlighed tæt på stranden.", conditions: "Indtjekning efter kl. 16.",
+});
+check("link text: description is kept", fromLink.description === "Lys lejlighed tæt på stranden.");
+check("link text: '85 m²' becomes the living area", fromLink.livingAreaM2 === 85, String(fromLink.livingAreaM2));
+check("link text: house rules become practical notes", fromLink.practicalNotes === "Indtjekning efter kl. 16.");
+check("link text: nothing guessed for unstated facts", fromLink.guests === null && fromLink.pool === null);
+check("link text: an unreadable size is dropped", detailsFromScraped({ size: "stor" }).livingAreaM2 === null);
+check("link text: an empty read is empty", detailsAreEmpty(detailsFromScraped({})));
 const listing = detailsFromListing({
   title: "Villa Sol", location: "Jávea, Alicante", description: "Lys villa.",
   features: { guests: 6, bedrooms: 3, bathrooms: 2, squareMeters: 140, privatePool: true, pool: true,
