@@ -3,8 +3,9 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { resolveVideoStyle, DEFAULT_VIDEO_STYLE, type VideoStyleId } from "@/lib/video-styles";
 import {
   adoptChosenImages, importPropertyFromUrl, PropertyImportError,
-  type ImportDiagnostics, type StoredImage,
+  type ExtractedProperty, type ImportDiagnostics, type StoredImage,
 } from "@/services/property-import";
+import { detailsFromListing } from "@/lib/property-details";
 import { analyzeImages, buildStoryboard, selectImages, type ImageAnalysis, type Storyboard } from "./ai-director";
 import { advanceScenes, createSceneRows, loadScenes, resetFailedScenes, summariseScenes } from "./wan-generator";
 import { chooseRestartState, type RestartState } from "@/lib/video-job-policy";
@@ -116,6 +117,21 @@ async function loadOrder(orderId: string): Promise<JobOrder | null> {
 async function patchOrder(orderId: string, patch: Record<string, unknown>): Promise<void> {
   const { error } = await createAdminClient().from("video_orders").update(patch).eq("id", orderId);
   if (error) console.error(`${LOG} could not update order ${orderId}: ${error.message}`);
+}
+
+/**
+ * Keep what the listing says about the property, for the editable "Tekst &
+ * info" panel on the video page. Only fills an empty field: once the customer
+ * has saved their own version, a later import never overwrites it. Best
+ * effort — before migration 015 the column does not exist and this is a no-op.
+ */
+async function seedPropertyDetails(orderId: string, property: ExtractedProperty): Promise<void> {
+  const { error } = await createAdminClient()
+    .from("video_orders")
+    .update({ property_details: detailsFromListing(property) })
+    .eq("id", orderId)
+    .is("property_details", null);
+  if (error) console.warn(`${LOG} property details not stored for ${orderId}: ${error.message}`);
 }
 
 async function mergeDiagnostics(order: JobOrder, patch: Partial<JobDiagnostics>): Promise<JobDiagnostics> {
@@ -306,6 +322,7 @@ export async function advanceJob(orderId: string): Promise<AdvanceResult> {
           import: imported.diagnostics,
           propertyTitle: imported.property.title,
         });
+        await seedPropertyDetails(orderId, imported.property);
         // Every photograph the pipeline will use now lives in our own storage.
         await syncOrderImageUrls(orderId, await loadStoredImages(orderId));
         // Keep the customer's own title if they typed one.

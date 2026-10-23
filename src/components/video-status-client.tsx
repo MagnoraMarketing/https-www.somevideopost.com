@@ -60,7 +60,6 @@ type Props = {
   description?: string | null;
   location?: string | null;
   bookingUrl?: string | null;
-  imageUrls: string[];
   accounts: SocialAccount[];
   initialPaid: boolean;
   videoPrice: string;
@@ -204,7 +203,7 @@ function SharePanel({ orderId, accounts, caption, setCaption }: { orderId: strin
   );
 }
 
-export function VideoStatusClient({ orderId, initialStatus, initialVideoUrl, initialVideoUrls, title, description, location, bookingUrl, imageUrls, accounts, initialPaid, videoPrice, videoStyle, initialJobState, initialCaption, initialCaptionPlatform, initialError, initialSharing }: Props) {
+export function VideoStatusClient({ orderId, initialStatus, initialVideoUrl, initialVideoUrls, title, description, location, bookingUrl, accounts, initialPaid, videoPrice, videoStyle, initialJobState, initialCaption, initialCaptionPlatform, initialError, initialSharing }: Props) {
   const paid = initialPaid;
   const [status, setStatus] = useState<Status>(initialStatus);
   const [videoUrl, setVideoUrl] = useState<string | undefined>(initialVideoUrl);
@@ -414,19 +413,6 @@ export function VideoStatusClient({ orderId, initialStatus, initialVideoUrl, ini
         error={jobError}
         onImagesUploaded={poll}
       />
-
-      {imageUrls.length > 0 && (
-        <div>
-          <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-400">Dine billeder ({imageUrls.length})</p>
-          <div className="grid grid-cols-5 gap-2">
-            {imageUrls.slice(0, 10).map((url, i) => (
-              <div key={i} className="aspect-video overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
-                {url.startsWith("http") && <img src={url} alt="" className="h-full w-full object-cover" />}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       <p className="text-center text-xs text-slate-400">Siden opdaterer sig selv, mens videoen laves</p>
     </div>

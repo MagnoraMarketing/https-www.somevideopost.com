@@ -8,6 +8,8 @@ import type { SocialAccount, VideoOrder } from "@/types/database";
 import { DEFAULT_VIDEO_STYLE, type VideoStyleId } from "@/lib/video-styles";
 import { buildEmbedCode, embedUrl, orderMediaList, videoFileRoute } from "@/lib/video-media";
 import type { SharingState } from "@/services/video-sharing";
+import { PropertyPanel } from "@/components/video/property-panel";
+import { sanitizeDetails } from "@/lib/property-details";
 
 // The page's poll loop calls advanceJob through a Server Action, and a single
 // step can import photographs, poll WAN and re-host a finished clip. Server
@@ -66,7 +68,7 @@ export default async function VideoDetailPage({
         title={order.title ?? "Video"}
         description="AI-genereret præsentationsvideo"
       />
-      <div className="flex-1 px-8 py-8 max-w-3xl">
+      <div className="flex-1 px-4 py-6 sm:px-8 sm:py-8 max-w-3xl">
         <VideoStatusClient
           orderId={id}
           initialStatus={order.status}
@@ -76,7 +78,6 @@ export default async function VideoDetailPage({
           description={property?.description ?? null}
           location={property?.location ?? null}
           bookingUrl={property?.booking_url ?? null}
-          imageUrls={order.image_urls ?? []}
           accounts={(accounts ?? []) as SocialAccount[]}
           initialPaid={(order as { paid?: boolean }).paid ?? false}
           videoPrice={formatPriceKey("video", currency)}
@@ -86,6 +87,16 @@ export default async function VideoDetailPage({
           initialCaptionPlatform={(order as { caption_platform?: string | null }).caption_platform ?? null}
           initialError={(order as { error_message?: string | null }).error_message ?? null}
           initialSharing={sharing}
+        />
+
+        {/* The listing link, the photographs and the editable property details, under the video. */}
+        <PropertyPanel
+          orderId={id}
+          sourceUrl={(order as { source_url?: string | null }).source_url ?? property?.booking_url ?? null}
+          imageUrls={order.image_urls ?? []}
+          initialDetails={(order as { property_details?: unknown }).property_details
+            ? sanitizeDetails((order as { property_details?: unknown }).property_details)
+            : null}
         />
       </div>
     </>

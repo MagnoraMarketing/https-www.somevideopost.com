@@ -89,6 +89,32 @@ async function writeCache(key: string, sourceUrl: string, property: ExtractedPro
 }
 
 /**
+ * What an earlier import already read from this listing, without fetching
+ * the page again. Null when the listing has never been imported (or the
+ * cache table is unavailable).
+ */
+export async function readCachedProperty(rawUrl: string): Promise<ExtractedProperty | null> {
+  let url: URL;
+  try {
+    url = new URL(rawUrl);
+  } catch {
+    return null;
+  }
+  try {
+    // No freshness limit here, unlike readCache: a listing's bedrooms and
+    // pool do not change from one day to the next, and this never re-fetches.
+    const { data } = await createAdminClient()
+      .from("property_import_cache")
+      .select("property_data")
+      .eq("url_key", cacheKey(url))
+      .maybeSingle<{ property_data: ExtractedProperty }>();
+    return data?.property_data ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Fetch a listing page and pull out its property data and image candidates.
  *
  * `forceRefresh` bypasses the cache so stale listings can be re-read.

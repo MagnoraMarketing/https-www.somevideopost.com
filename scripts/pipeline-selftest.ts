@@ -33,6 +33,7 @@ import {
   type RecentOrder,
 } from "@/lib/video-job-policy";
 import { summariseVideoOps } from "@/lib/video-ops-stats";
+import { detailsAreEmpty, detailsFromListing, emptyDetails, sanitizeDetails } from "@/lib/property-details";
 import { isStale, STALE_AFTER_HOURS } from "@/services/video/driver";
 import { renderLockedPreview } from "@/services/video/assembler";
 import { execFileSync } from "child_process";
@@ -361,7 +362,34 @@ check("every WAN attempt is counted", stats.wanSubmissions === 6);
 check("delivered footage seconds", stats.wanSecondsDelivered === 5);
 check("errors grouped", stats.topErrors.length === 1 && stats.topErrors[0].count === 2);
 
-// ── 12. Locked preview render ─────────────────────────────────────────────
+// ── 12. Property details panel ────────────────────────────────────────────
+section("Property details");
+const listing = detailsFromListing({
+  title: "Villa Sol", location: "Jávea, Alicante", description: "Lys villa.",
+  features: { guests: 6, bedrooms: 3, bathrooms: 2, squareMeters: 140, privatePool: true, pool: true,
+    beachDistanceMeters: 800, amenities: ["Pool", "Terrasse", "Aircondition", "Terrasse"] },
+});
+check("listing facts carried over", listing.title === "Villa Sol" && listing.guests === 6 && listing.bedrooms === 3
+  && listing.bathrooms === 2 && listing.livingAreaM2 === 140 && listing.beachDistanceM === 800);
+check("private pool recognised, not duplicated as a feature", listing.pool === "private" && !listing.features.includes("Pool"));
+check("features deduplicated", JSON.stringify(listing.features) === JSON.stringify(["Terrasse", "Aircondition"]));
+check("seeded details are marked as from the listing", listing.source === "listing");
+const bare = detailsFromListing({ features: { amenities: [] } });
+check("listing without facts leaves fields empty, nothing guessed", detailsAreEmpty(bare) && bare.pool === null);
+const cleaned = sanitizeDetails({
+  title: "  Villa  ", guests: "6", bedrooms: -1, bathrooms: 999, livingAreaM2: "120,5",
+  pool: "jacuzzi", features: ["Terrasse", "", 42, "Terrasse"], description: "x".repeat(5000), source: "hacker",
+});
+check("text trimmed", cleaned.title === "Villa");
+check("numbers parsed, out-of-range dropped", cleaned.guests === 6 && cleaned.bedrooms === null && cleaned.bathrooms === null && cleaned.livingAreaM2 === 120.5);
+check("unknown pool value dropped", cleaned.pool === null);
+check("features cleaned", JSON.stringify(cleaned.features) === JSON.stringify(["Terrasse"]));
+check("long text capped", (cleaned.description ?? "").length === 4000);
+check("unknown source falls back to listing", cleaned.source === "listing");
+check("garbage input gives empty details", detailsAreEmpty(sanitizeDetails("nonsense")) && detailsAreEmpty(sanitizeDetails(null)));
+check("empty details are empty", detailsAreEmpty(emptyDetails()));
+
+// ── 13. Locked preview render ─────────────────────────────────────────────
 section("Locked preview");
 if (!ffmpegAvailable()) {
   console.log("  skip  no ffmpeg binary available");
