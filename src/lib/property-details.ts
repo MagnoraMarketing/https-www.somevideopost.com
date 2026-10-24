@@ -85,6 +85,27 @@ export function detailsFromListing(property: ExtractedProperty, now = new Date()
   }, now);
 }
 
+/**
+ * What the order form's link reader found, mapped onto the editable fields.
+ * The reader returns loose strings, so only what parses cleanly is kept: a
+ * size like "85 m²" becomes the living area, house rules become the
+ * practical notes.
+ */
+export function detailsFromScraped(
+  scraped: { title?: string; description?: string; location?: string; size?: string; conditions?: string },
+  now = new Date(),
+): PropertyDetails {
+  const area = scraped.size?.match(/(\d+(?:[.,]\d+)?)\s*m(?:²|2)/i)?.[1];
+  return sanitizeDetails({
+    title: scraped.title,
+    location: scraped.location,
+    livingAreaM2: area,
+    description: scraped.description,
+    practicalNotes: scraped.conditions,
+    source: "listing",
+  }, now);
+}
+
 function text(value: unknown, max: number): string | null {
   if (typeof value !== "string") return null;
   const trimmed = value.replace(/\r\n/g, "\n").trim();

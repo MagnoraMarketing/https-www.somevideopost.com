@@ -14,6 +14,7 @@ import { adoptChosenImages } from "@/services/property-import";
 import type { AspectRatio } from "@/services/video/assembler";
 import { loadScenes } from "@/services/video/wan-generator";
 import { videoFileRoute } from "@/lib/video-media";
+import { detailsAreEmpty, sanitizeDetails } from "@/lib/property-details";
 
 /**
  * Server actions for the property-video pipeline.
@@ -53,6 +54,10 @@ export async function createPropertyVideoOrder(formData: FormData): Promise<void
     .filter((u) => /^https?:\/\//i.test(u) && u.length <= 2048)
     .slice(0, MAX_FORM_IMAGES);
 
+  // The text and facts the form read from the listing (and the customer may
+  // have edited), so the video page shows them without reading the page again.
+  const propertyDetails = parseFormDetails(formData.get("property_details"), title);
+
   // Duplicate protection and cost control. WAN generation is paid for before
   // the customer pays for the video, so a double click must not start two
   // films and one account must not be able to queue up dozens at once.
@@ -89,6 +94,7 @@ export async function createPropertyVideoOrder(formData: FormData): Promise<void
       video_style: videoStyle,
       aspect_ratio: aspectRatio,
       source_url: sourceUrl,
+      ...(propertyDetails ? { property_details: propertyDetails } : {}),
     })
     .select("id")
     .single<{ id: string }>();
@@ -133,6 +139,17 @@ export async function createPropertyVideoOrder(formData: FormData): Promise<void
   }
 
   redirect(`/videos/${order.id}?started=1`);
+}
+
+function parseFormDetails(raw: FormDataEntryValue | null, title: string | null) {
+  if (typeof raw !== "string" || !raw.trim() || raw.length > 20_000) return null;
+  try {
+    const details = sanitizeDetails(JSON.parse(raw));
+    if (!details.title && title) details.title = title;
+    return detailsAreEmpty(details) ? null : details;
+  } catch {
+    return null;
+  }
 }
 
 export type JobStatusView = AdvanceResult & {
